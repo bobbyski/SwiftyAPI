@@ -357,9 +357,18 @@ public struct SwiftyAPIView: View {
                     ForEach(responses, id: \.statusCode) { response in
                         parameterRow(
                             name: response.statusCode,
-                            type: response.contentTypes.first ?? "response",
+                            type: response.schemaName ?? response.contentTypes.first ?? "response",
                             detail: response.description ?? "No response description."
                         )
+
+                        ForEach(response.schemaFields, id: \.displayID) { field in
+                            parameterRow(
+                                name: field.name,
+                                type: field.type,
+                                detail: schemaFieldDetail(field)
+                            )
+                            .padding(.leading, 16)
+                        }
                     }
                 }
             }
@@ -573,7 +582,7 @@ public struct SwiftyAPIView: View {
         let queryParameters = operation.parameters.filter { $0.location == "query" }
         let queryString = queryParameters.isEmpty ? "" : "?" + queryParameters.map { "\($0.name)={\($0.name)}" }.joined(separator: "&")
         let contentType = operation.requestBody?.contentTypes.first
-        let bodyLine = operation.requestBody == nil ? "" : " \\\n--data-raw '{}'"
+        let bodyLine = operation.requestBody.map { " \\\n--data-raw '\(requestBodyExample(for: $0))'" } ?? ""
         let headerLine = contentType.map { " \\\n--header 'Content-Type: \($0)'" } ?? ""
 
         return """
@@ -581,17 +590,74 @@ public struct SwiftyAPIView: View {
         """
     }
 
-    private var responseCodePreview: String {
-        let response = selectedOperation?.responses.first
-        let status = response?.statusCode ?? "200"
-        let description = response?.description ?? "Example response"
-        let contentType = response?.contentTypes.first ?? "application/json"
+    private func requestBodyExample(for requestBody: OpenAPIRequestBody) -> String {
+        guard requestBody.schemaFields.isEmpty == false else {
+            return "{}"
+        }
+
+        let lines = requestBody.schemaFields.map { field in
+            "  \"\(field.name)\": \(exampleValue(for: field))"
+        }
 
         return """
         {
-          "status": "\(status)",
-          "contentType": "\(contentType)",
-          "description": "\(description)"
+        \(lines.joined(separator: ",\n"))
+        }
+        """
+    }
+
+    private func exampleValue(for field: OpenAPISchemaField) -> String {
+        let lowercasedName = field.name.lowercased()
+        let lowercasedType = field.type.lowercased()
+
+        if lowercasedType.hasPrefix("[") {
+            return "[]"
+        }
+
+        if lowercasedType.contains("boolean") {
+            return "true"
+        }
+
+        if lowercasedType.contains("integer") || lowercasedType.contains("number") {
+            return "0"
+        }
+
+        if lowercasedType.contains("object") || lowercasedType.first?.isUppercase == true {
+            return "{}"
+        }
+
+        if lowercasedName.contains("timestamp") || lowercasedName.contains("time") || lowercasedName.contains("date") {
+            return "\"2026-05-05T00:00:00Z\""
+        }
+
+        return "\"\(field.name)\""
+    }
+
+    private var responseCodePreview: String {
+        guard let response = selectedOperation?.responses.first else {
+            return "{}"
+        }
+
+        if response.statusCode == "204" || response.contentTypes.isEmpty {
+            return "HTTP \(response.statusCode) \(response.description ?? "No Content")"
+        }
+
+        guard response.schemaFields.isEmpty == false else {
+            return """
+            {
+              "status": "\(response.statusCode)",
+              "description": "\(response.description ?? "Response")"
+            }
+            """
+        }
+
+        let lines = response.schemaFields.map { field in
+            "  \"\(field.name)\": \(exampleValue(for: field))"
+        }
+
+        return """
+        {
+        \(lines.joined(separator: ",\n"))
         }
         """
     }

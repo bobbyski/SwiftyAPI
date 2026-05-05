@@ -32,6 +32,16 @@ func parsesJSONRequestAndResponseDetails() throws {
             "description": "The item was not found.",
             "content": { "application/json": { "schema": { "type": "object" } } }
           }
+        },
+        "schemas": {
+          "Item": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer" },
+              "name": { "type": "string" }
+            },
+            "required": ["id"]
+          }
         }
       },
       "paths": {
@@ -43,7 +53,14 @@ func parsesJSONRequestAndResponseDetails() throws {
             "responses": {
               "200": {
                 "description": "Successful response.",
-                "content": { "application/json": { "schema": { "type": "array" } } }
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Item" }
+                    }
+                  }
+                }
               },
               "404": { "$ref": "#/components/responses/NotFound" }
             }
@@ -76,6 +93,9 @@ func parsesJSONRequestAndResponseDetails() throws {
     #expect(listItems.responses.map(\.statusCode) == ["200", "404"])
     #expect(listItems.responses.last?.description == "The item was not found.")
     #expect(listItems.responses.first?.contentTypes == ["application/json"])
+    #expect(listItems.responses.first?.schemaName == "Item")
+    #expect(listItems.responses.first?.schemaFields.map(\.name) == ["id", "name"])
+    #expect(listItems.responses.first?.schemaFields.first?.isRequired == true)
     #expect(createItem.requestBody?.isRequired == true)
     #expect(createItem.requestBody?.contentTypes == ["application/json"])
 }
@@ -112,6 +132,16 @@ func parsesYAMLRequestAndResponseDetails() throws {
             application/json:
               schema:
                 type: object
+      schemas:
+        Event:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+          required:
+            - id
     paths:
       /events:
         get:
@@ -125,7 +155,7 @@ func parsesYAMLRequestAndResponseDetails() throws {
               content:
                 application/json:
                   schema:
-                    type: object
+                    $ref: '#/components/schemas/Event'
             '400':
               $ref: '#/components/responses/BadRequest'
         post:
@@ -151,6 +181,9 @@ func parsesYAMLRequestAndResponseDetails() throws {
     #expect(listEvents.parameters.first?.type == "integer")
     #expect(listEvents.responses.map(\.statusCode) == ["200", "400"])
     #expect(listEvents.responses.last?.description == "Bad request.")
+    #expect(listEvents.responses.first?.schemaName == "Event")
+    #expect(listEvents.responses.first?.schemaFields.map(\.name) == ["id", "name"])
+    #expect(listEvents.responses.first?.schemaFields.first?.isRequired == true)
     #expect(createEvent.requestBody?.isRequired == true)
     #expect(createEvent.requestBody?.contentTypes == ["application/json"])
 }

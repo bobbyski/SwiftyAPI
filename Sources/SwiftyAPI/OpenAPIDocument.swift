@@ -172,11 +172,21 @@ public struct OpenAPIResponse: Equatable, Sendable {
     public var statusCode: String
     public var description: String?
     public var contentTypes: [String]
+    public var schemaName: String?
+    public var schemaFields: [OpenAPISchemaField]
 
-    public init(statusCode: String, description: String? = nil, contentTypes: [String] = []) {
+    public init(
+        statusCode: String,
+        description: String? = nil,
+        contentTypes: [String] = [],
+        schemaName: String? = nil,
+        schemaFields: [OpenAPISchemaField] = []
+    ) {
         self.statusCode = statusCode
         self.description = description
         self.contentTypes = contentTypes
+        self.schemaName = schemaName
+        self.schemaFields = schemaFields
     }
 }
 

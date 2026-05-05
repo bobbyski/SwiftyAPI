@@ -96,7 +96,8 @@ public enum OpenAPIDocumentParser {
                         ),
                         responses: parseJSONResponses(
                             operationObject?["responses"],
-                            components: responseComponents
+                            components: responseComponents,
+                            schemaComponents: schemaComponents
                         )
                     )
                 )
@@ -153,7 +154,11 @@ public enum OpenAPIDocumentParser {
         )
     }
 
-    private static func parseJSONResponses(_ value: Any?, components: [String: Any]) -> [OpenAPIResponse] {
+    private static func parseJSONResponses(
+        _ value: Any?,
+        components: [String: Any],
+        schemaComponents: [String: Any]
+    ) -> [OpenAPIResponse] {
         guard let responses = value as? [String: Any] else {
             return []
         }
@@ -163,10 +168,16 @@ public enum OpenAPIDocumentParser {
         }.map { statusCode in
             let resolved = resolveJSONObject(responses[statusCode], components: components)
             let content = resolved["content"] as? [String: Any] ?? [:]
+            let schema = content
+                .values
+                .compactMap { ($0 as? [String: Any])?["schema"] }
+                .first
             return OpenAPIResponse(
                 statusCode: statusCode,
                 description: resolved["description"] as? String,
-                contentTypes: content.keys.sorted()
+                contentTypes: content.keys.sorted(),
+                schemaName: schemaReferenceName(from: schema),
+                schemaFields: parseJSONSchemaFields(schema, components: schemaComponents)
             )
         }
     }
@@ -205,16 +216,27 @@ public enum OpenAPIDocumentParser {
     }
 
     private static func schemaReferenceName(from value: Any?) -> String? {
-        guard let schema = value as? [String: Any],
-              let ref = schema["$ref"] as? String else {
+        guard let schema = value as? [String: Any] else {
             return nil
         }
 
-        return ref.split(separator: "/").last.map(String.init)
+        if let ref = schema["$ref"] as? String {
+            return ref.split(separator: "/").last.map(String.init)
+        }
+
+        if schema["type"] as? String == "array" {
+            return schemaReferenceName(from: schema["items"])
+        }
+
+        return nil
     }
 
     private static func parseJSONSchemaFields(_ value: Any?, components: [String: Any]) -> [OpenAPISchemaField] {
         let schema = resolveJSONObject(value, components: components)
+        if schema["type"] as? String == "array" {
+            return parseJSONSchemaFields(schema["items"], components: components)
+        }
+
         let properties = schema["properties"] as? [String: Any] ?? [:]
         let required = Set(schema["required"] as? [String] ?? [])
 
@@ -351,7 +373,11 @@ public enum OpenAPIDocumentParser {
                         components: requestBodyComponents,
                         schemaComponents: schemaComponents
                     ),
-                    responses: parseYAMLResponses(from: block, components: responseComponents)
+                    responses: parseYAMLResponses(
+                        from: block,
+                        components: responseComponents,
+                        schemaComponents: schemaComponents
+                    )
                 )
             )
             currentMethod = nil
@@ -478,20 +504,25 @@ public enum OpenAPIDocumentParser {
             return nil
         }
 
-        let schemaBlock = yamlNestedBlock(in: bodyBlock, parent: "schema")
-        let schemaName = yamlReference(in: schemaBlock)
-        let resolvedSchemaBlock = schemaName.flatMap { schemaComponents[$0] } ?? schemaBlock
+        let schema = resolveYAMLSchemaBlock(
+            yamlNestedBlock(in: bodyBlock, parent: "schema"),
+            components: schemaComponents
+        )
 
         return OpenAPIRequestBody(
             isRequired: yamlBool(in: bodyBlock, key: "required"),
             contentTypes: yamlContentTypes(in: bodyBlock),
             description: yamlScalar(in: bodyBlock, key: "description"),
-            schemaName: schemaName,
-            schemaFields: parseYAMLSchemaFields(from: resolvedSchemaBlock)
+            schemaName: schema.name,
+            schemaFields: parseYAMLSchemaFields(from: schema.block)
         )
     }
 
-    private static func parseYAMLResponses(from block: [YAMLLine], components: [String: [YAMLLine]]) -> [OpenAPIResponse] {
+    private static func parseYAMLResponses(
+        from block: [YAMLLine],
+        components: [String: [YAMLLine]],
+        schemaComponents: [String: [YAMLLine]]
+    ) -> [OpenAPIResponse] {
         let responseBlock = yamlNestedBlock(in: block, parent: "responses")
         let responseIndent = responseBlock
             .filter { $0.text.hasSuffix(":") }
@@ -512,11 +543,17 @@ public enum OpenAPIDocumentParser {
 
             let nested = nestedLines(after: index, in: responseBlock, parentIndent: line.indent)
             let resolved = yamlReference(in: nested).flatMap { components[$0] } ?? nested
+            let schema = resolveYAMLSchemaBlock(
+                yamlNestedBlock(in: resolved, parent: "schema"),
+                components: schemaComponents
+            )
             responses.append(
                 OpenAPIResponse(
                     statusCode: statusCode,
                     description: yamlScalar(in: resolved, key: "description"),
-                    contentTypes: yamlContentTypes(in: resolved)
+                    contentTypes: yamlContentTypes(in: resolved),
+                    schemaName: schema.name,
+                    schemaFields: parseYAMLSchemaFields(from: schema.block)
                 )
             )
         }
@@ -623,6 +660,25 @@ public enum OpenAPIDocumentParser {
         }
 
         return yamlReference(in: schemaBlock)
+    }
+
+    private static func resolveYAMLSchemaBlock(
+        _ schemaBlock: [YAMLLine],
+        components: [String: [YAMLLine]]
+    ) -> (name: String?, block: [YAMLLine]) {
+        if let name = yamlReference(in: schemaBlock) {
+            return (name, components[name] ?? schemaBlock)
+        }
+
+        if yamlScalar(in: schemaBlock, key: "type") == "array" {
+            let itemsBlock = yamlNestedBlock(in: schemaBlock, parent: "items")
+            if let name = yamlReference(in: itemsBlock) {
+                return (name, components[name] ?? itemsBlock)
+            }
+            return (nil, itemsBlock)
+        }
+
+        return (nil, schemaBlock)
     }
 
     private static func parseYAMLSchemaFields(from block: [YAMLLine]) -> [OpenAPISchemaField] {
