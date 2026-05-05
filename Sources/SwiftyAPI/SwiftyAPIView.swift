@@ -106,7 +106,3 @@ public struct SwiftyAPIView: View {
         }
     }
 }
-
-#Preview {
-    SwiftyAPIView()
-}

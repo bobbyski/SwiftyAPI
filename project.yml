@@ -1,0 +1,92 @@
+name: SwiftyAPI
+options:
+  bundleIdPrefix: com.openapiview
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  SwiftyAPI:
+    type: framework
+    platform: macOS
+    sources:
+      - path: Sources/SwiftyAPI
+    info:
+      path: Generated/SwiftyAPI-Info.plist
+      properties:
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleName: $(PRODUCT_NAME)
+        CFBundlePackageType: FMWK
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.openapiview.SwiftyAPI
+        PRODUCT_NAME: SwiftyAPI
+        DEFINES_MODULE: YES
+        SKIP_INSTALL: YES
+  SwiftyAPIDemo:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/SwiftyAPIDemo
+    dependencies:
+      - target: SwiftyAPI
+    info:
+      path: Generated/SwiftyAPIDemo-Info.plist
+      properties:
+        CFBundleDisplayName: SwiftyAPI Demo
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleName: $(PRODUCT_NAME)
+        CFBundlePackageType: APPL
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        NSPrincipalClass: NSApplication
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.openapiview.SwiftyAPIDemo
+        PRODUCT_NAME: SwiftyAPI Demo
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+  SwiftyAPITests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests/SwiftyAPITests
+    dependencies:
+      - target: SwiftyAPI
+    info:
+      path: Generated/SwiftyAPITests-Info.plist
+      properties:
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleName: $(PRODUCT_NAME)
+        CFBundlePackageType: BNDL
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.openapiview.SwiftyAPITests
+schemes:
+  SwiftyAPIDemo:
+    build:
+      targets:
+        SwiftyAPIDemo: all
+        SwiftyAPITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - SwiftyAPITests
+  SwiftyAPI:
+    build:
+      targets:
+        SwiftyAPI: all
+    test:
+      config: Debug
+      targets:
+        - SwiftyAPITests
