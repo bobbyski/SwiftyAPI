@@ -28,7 +28,10 @@ let package = Package(
         ),
         .executableTarget(
             name: "SwiftyAPIDemo",
-            dependencies: ["SwiftyAPI"]
+            dependencies: ["SwiftyAPI"],
+            resources: [
+                .process("Resources")
+            ]
         ),
         .executableTarget(
             name: "SwiftyAPIGenerator",

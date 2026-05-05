@@ -84,17 +84,99 @@ public struct OpenAPIOperation: Identifiable, Equatable, Sendable {
     public var path: String
     public var operationID: String?
     public var summary: String?
+    public var description: String?
+    public var parameters: [OpenAPIParameter]
+    public var requestBody: OpenAPIRequestBody?
+    public var responses: [OpenAPIResponse]
 
     public init(
         method: OpenAPIHTTPMethod,
         path: String,
         operationID: String? = nil,
-        summary: String? = nil
+        summary: String? = nil,
+        description: String? = nil,
+        parameters: [OpenAPIParameter] = [],
+        requestBody: OpenAPIRequestBody? = nil,
+        responses: [OpenAPIResponse] = []
     ) {
         self.method = method
         self.path = path
         self.operationID = operationID
         self.summary = summary
+        self.description = description
+        self.parameters = parameters
+        self.requestBody = requestBody
+        self.responses = responses
+    }
+}
+
+public struct OpenAPIParameter: Equatable, Sendable {
+    public var name: String
+    public var location: String
+    public var isRequired: Bool
+    public var type: String?
+    public var description: String?
+
+    public init(
+        name: String,
+        location: String,
+        isRequired: Bool = false,
+        type: String? = nil,
+        description: String? = nil
+    ) {
+        self.name = name
+        self.location = location
+        self.isRequired = isRequired
+        self.type = type
+        self.description = description
+    }
+}
+
+public struct OpenAPIRequestBody: Equatable, Sendable {
+    public var isRequired: Bool
+    public var contentTypes: [String]
+    public var description: String?
+    public var schemaName: String?
+    public var schemaFields: [OpenAPISchemaField]
+
+    public init(
+        isRequired: Bool = false,
+        contentTypes: [String] = [],
+        description: String? = nil,
+        schemaName: String? = nil,
+        schemaFields: [OpenAPISchemaField] = []
+    ) {
+        self.isRequired = isRequired
+        self.contentTypes = contentTypes
+        self.description = description
+        self.schemaName = schemaName
+        self.schemaFields = schemaFields
+    }
+}
+
+public struct OpenAPISchemaField: Equatable, Sendable {
+    public var name: String
+    public var type: String
+    public var isRequired: Bool
+    public var description: String?
+
+    public init(name: String, type: String, isRequired: Bool = false, description: String? = nil) {
+        self.name = name
+        self.type = type
+        self.isRequired = isRequired
+        self.description = description
+    }
+}
+
+public struct OpenAPIResponse: Equatable, Sendable {
+    public var statusCode: String
+    public var description: String?
+    public var contentTypes: [String]
+
+    public init(statusCode: String, description: String? = nil, contentTypes: [String] = []) {
+        self.statusCode = statusCode
+        self.description = description
+        self.contentTypes = contentTypes
     }
 }
 

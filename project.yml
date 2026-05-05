@@ -38,6 +38,10 @@ targets:
     platform: macOS
     sources:
       - path: Sources/SwiftyAPIDemo
+        excludes:
+          - Resources
+      - path: Sources/SwiftyAPIDemo/Resources
+        buildPhase: resources
     dependencies:
       - target: SwiftyAPI
     info:

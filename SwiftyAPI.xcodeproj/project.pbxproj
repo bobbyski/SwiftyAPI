@@ -16,8 +16,10 @@
 		92A9D5118967E27A9E7263C3 /* SwiftyAPI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0F2BAC32111CEF496D2487CD /* SwiftyAPI.framework */; };
 		9D6DFA65F5224A5DD173EFFC /* OpenAPIFormatTranslator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C0A176961C0863FF8A9A6F /* OpenAPIFormatTranslator.swift */; };
 		A2A683CFCFFB55126F8AD1A3 /* OpenAPIDocumentParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7BA8C11196A91080A7860B3 /* OpenAPIDocumentParser.swift */; };
+		ADC7C0593A7B2101749C08EF /* petstore-swagger.json in Resources */ = {isa = PBXBuildFile; fileRef = 3D0D382959B61FADA032B829 /* petstore-swagger.json */; };
 		AEA8816EDFE2E7647CC5BF55 /* OpenAPIDocumentParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73B84F44516F28193A5B549F /* OpenAPIDocumentParserTests.swift */; };
 		CD24F4D088C758A1663DC11A /* OpenAPITemplates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B22BCA0438E4260E0EC14A2 /* OpenAPITemplates.swift */; };
+		D97956C7E02F71B9DC877DC7 /* museum-api.yaml in Resources */ = {isa = PBXBuildFile; fileRef = CB34A44C06D868EECFE40CA6 /* museum-api.yaml */; };
 		DF87485098A9808BE08430BD /* SwiftyAPI.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0F2BAC32111CEF496D2487CD /* SwiftyAPI.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		E785EA454071A46A96C7ADCF /* SwiftyAPIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF80AA931F1AD8FFC9930E87 /* SwiftyAPIView.swift */; };
 		FBCDF2B14FDF1F499706F8E2 /* SwiftyAPI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0F2BAC32111CEF496D2487CD /* SwiftyAPI.framework */; };
@@ -69,6 +71,7 @@
 		0F2BAC32111CEF496D2487CD /* SwiftyAPI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftyAPI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1234ADCF75DDD7D200CE8F36 /* OpenAPIFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAPIFile.swift; sourceTree = "<group>"; };
 		1A985CAE7E1DF61FFC37CA84 /* SwiftEndpointGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftEndpointGenerator.swift; sourceTree = "<group>"; };
+		3D0D382959B61FADA032B829 /* petstore-swagger.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "petstore-swagger.json"; sourceTree = "<group>"; };
 		6B13BAA47F73503F8267881B /* SwiftyAPIDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftyAPIDebugView.swift; sourceTree = "<group>"; };
 		6C078701EB0637A2D6420C38 /* SwiftyAPITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftyAPITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		73B84F44516F28193A5B549F /* OpenAPIDocumentParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAPIDocumentParserTests.swift; sourceTree = "<group>"; };
@@ -76,6 +79,7 @@
 		9B22BCA0438E4260E0EC14A2 /* OpenAPITemplates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAPITemplates.swift; sourceTree = "<group>"; };
 		AE22467B35A54313E564E367 /* OpenAPIDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAPIDocument.swift; sourceTree = "<group>"; };
 		C7C0A176961C0863FF8A9A6F /* OpenAPIFormatTranslator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAPIFormatTranslator.swift; sourceTree = "<group>"; };
+		CB34A44C06D868EECFE40CA6 /* museum-api.yaml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = "museum-api.yaml"; sourceTree = "<group>"; };
 		D2499A513DA6EB5125F80FCF /* SwiftyAPIDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftyAPIDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E7BA8C11196A91080A7860B3 /* OpenAPIDocumentParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAPIDocumentParser.swift; sourceTree = "<group>"; };
 		EF80AA931F1AD8FFC9930E87 /* SwiftyAPIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftyAPIView.swift; sourceTree = "<group>"; };
@@ -114,6 +118,7 @@
 			isa = PBXGroup;
 			children = (
 				93FC7C892DB45EA76031E899 /* SwiftyAPIDemoApp.swift */,
+				C7B10B03DFC37EF2C6964E15 /* Resources */,
 			);
 			path = SwiftyAPIDemo;
 			sourceTree = "<group>";
@@ -147,6 +152,15 @@
 				50CF6CC249D5A35A7E3FDEAB /* SwiftyAPITests */,
 			);
 			path = Tests;
+			sourceTree = "<group>";
+		};
+		C7B10B03DFC37EF2C6964E15 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				CB34A44C06D868EECFE40CA6 /* museum-api.yaml */,
+				3D0D382959B61FADA032B829 /* petstore-swagger.json */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		D8F4F00C5A940832739A029C /* Sources */ = {
@@ -213,6 +227,7 @@
 			buildConfigurationList = C5AC13067198785F354F0874 /* Build configuration list for PBXNativeTarget "SwiftyAPIDemo" */;
 			buildPhases = (
 				8550AA53AF44DB0479BEE98A /* Sources */,
+				BE76E06CBAC2E6DF8F430B67 /* Resources */,
 				24E36F8A20462DFEBF40512C /* Frameworks */,
 				B801F9221A6F0CFCB7F33F2F /* Embed Frameworks */,
 			);
@@ -271,6 +286,18 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		BE76E06CBAC2E6DF8F430B67 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D97956C7E02F71B9DC877DC7 /* museum-api.yaml in Resources */,
+				ADC7C0593A7B2101749C08EF /* petstore-swagger.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		3CD89672AC17259458F874E3 /* Sources */ = {
