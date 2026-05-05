@@ -7,12 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		158118E4E0F26E43017EA367 /* SwiftyAPIDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B13BAA47F73503F8267881B /* SwiftyAPIDebugView.swift */; };
 		1C189CCA140AFFF2DB8EA806 /* SwiftEndpointGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A985CAE7E1DF61FFC37CA84 /* SwiftEndpointGenerator.swift */; };
 		29C782E15B66D43C810F3499 /* OpenAPIDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE22467B35A54313E564E367 /* OpenAPIDocument.swift */; };
 		7166F4DDAB63A21C3B0FC586 /* SwiftyAPI.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0F2BAC32111CEF496D2487CD /* SwiftyAPI.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		808A738C62345E853AB0E479 /* OpenAPIFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234ADCF75DDD7D200CE8F36 /* OpenAPIFile.swift */; };
 		8B5697B16258130BE9105029 /* SwiftyAPIDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93FC7C892DB45EA76031E899 /* SwiftyAPIDemoApp.swift */; };
 		92A9D5118967E27A9E7263C3 /* SwiftyAPI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0F2BAC32111CEF496D2487CD /* SwiftyAPI.framework */; };
+		9D6DFA65F5224A5DD173EFFC /* OpenAPIFormatTranslator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C0A176961C0863FF8A9A6F /* OpenAPIFormatTranslator.swift */; };
 		A2A683CFCFFB55126F8AD1A3 /* OpenAPIDocumentParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7BA8C11196A91080A7860B3 /* OpenAPIDocumentParser.swift */; };
 		AEA8816EDFE2E7647CC5BF55 /* OpenAPIDocumentParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73B84F44516F28193A5B549F /* OpenAPIDocumentParserTests.swift */; };
 		CD24F4D088C758A1663DC11A /* OpenAPITemplates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B22BCA0438E4260E0EC14A2 /* OpenAPITemplates.swift */; };
@@ -67,11 +69,13 @@
 		0F2BAC32111CEF496D2487CD /* SwiftyAPI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftyAPI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1234ADCF75DDD7D200CE8F36 /* OpenAPIFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAPIFile.swift; sourceTree = "<group>"; };
 		1A985CAE7E1DF61FFC37CA84 /* SwiftEndpointGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftEndpointGenerator.swift; sourceTree = "<group>"; };
+		6B13BAA47F73503F8267881B /* SwiftyAPIDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftyAPIDebugView.swift; sourceTree = "<group>"; };
 		6C078701EB0637A2D6420C38 /* SwiftyAPITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftyAPITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		73B84F44516F28193A5B549F /* OpenAPIDocumentParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAPIDocumentParserTests.swift; sourceTree = "<group>"; };
 		93FC7C892DB45EA76031E899 /* SwiftyAPIDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftyAPIDemoApp.swift; sourceTree = "<group>"; };
 		9B22BCA0438E4260E0EC14A2 /* OpenAPITemplates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAPITemplates.swift; sourceTree = "<group>"; };
 		AE22467B35A54313E564E367 /* OpenAPIDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAPIDocument.swift; sourceTree = "<group>"; };
+		C7C0A176961C0863FF8A9A6F /* OpenAPIFormatTranslator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAPIFormatTranslator.swift; sourceTree = "<group>"; };
 		D2499A513DA6EB5125F80FCF /* SwiftyAPIDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftyAPIDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E7BA8C11196A91080A7860B3 /* OpenAPIDocumentParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAPIDocumentParser.swift; sourceTree = "<group>"; };
 		EF80AA931F1AD8FFC9930E87 /* SwiftyAPIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftyAPIView.swift; sourceTree = "<group>"; };
@@ -128,8 +132,10 @@
 				AE22467B35A54313E564E367 /* OpenAPIDocument.swift */,
 				E7BA8C11196A91080A7860B3 /* OpenAPIDocumentParser.swift */,
 				1234ADCF75DDD7D200CE8F36 /* OpenAPIFile.swift */,
+				C7C0A176961C0863FF8A9A6F /* OpenAPIFormatTranslator.swift */,
 				9B22BCA0438E4260E0EC14A2 /* OpenAPITemplates.swift */,
 				1A985CAE7E1DF61FFC37CA84 /* SwiftEndpointGenerator.swift */,
+				6B13BAA47F73503F8267881B /* SwiftyAPIDebugView.swift */,
 				EF80AA931F1AD8FFC9930E87 /* SwiftyAPIView.swift */,
 			);
 			path = SwiftyAPI;
@@ -231,6 +237,18 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					1A44896FABF013DEB06B7AC9 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Manual;
+					};
+					B3964517F1B7183DE0C94511 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Manual;
+					};
+					BF94E00115FA2BE91555DB50 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Manual;
+					};
 				};
 			};
 			buildConfigurationList = 35C12F5E71B33E63D5A028D3 /* Build configuration list for PBXProject "SwiftyAPI" */;
@@ -262,8 +280,10 @@
 				29C782E15B66D43C810F3499 /* OpenAPIDocument.swift in Sources */,
 				A2A683CFCFFB55126F8AD1A3 /* OpenAPIDocumentParser.swift in Sources */,
 				808A738C62345E853AB0E479 /* OpenAPIFile.swift in Sources */,
+				9D6DFA65F5224A5DD173EFFC /* OpenAPIFormatTranslator.swift in Sources */,
 				CD24F4D088C758A1663DC11A /* OpenAPITemplates.swift in Sources */,
 				1C189CCA140AFFF2DB8EA806 /* SwiftEndpointGenerator.swift in Sources */,
+				158118E4E0F26E43017EA367 /* SwiftyAPIDebugView.swift in Sources */,
 				E785EA454071A46A96C7ADCF /* SwiftyAPIView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -333,9 +353,12 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -368,6 +391,7 @@
 		392E02372F88664CC2F4B954 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGNING_ALLOWED = YES;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -392,6 +416,7 @@
 		3BB0312CA8589001BBF33D80 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGNING_ALLOWED = YES;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -417,6 +442,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGNING_ALLOWED = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = "Generated/SwiftyAPIDemo-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -433,6 +459,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGNING_ALLOWED = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = "Generated/SwiftyAPIDemo-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -449,6 +476,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGNING_ALLOWED = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = "Generated/SwiftyAPITests-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -465,6 +493,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGNING_ALLOWED = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = "Generated/SwiftyAPITests-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -510,9 +539,12 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;

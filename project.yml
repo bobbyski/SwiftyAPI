@@ -9,6 +9,9 @@ settings:
     SWIFT_VERSION: "6.0"
     MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
 targets:
   SwiftyAPI:
     type: framework
@@ -29,6 +32,7 @@ targets:
         PRODUCT_NAME: SwiftyAPI
         DEFINES_MODULE: YES
         SKIP_INSTALL: YES
+        CODE_SIGNING_ALLOWED: YES
   SwiftyAPIDemo:
     type: application
     platform: macOS
@@ -52,6 +56,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.openapiview.SwiftyAPIDemo
         PRODUCT_NAME: SwiftyAPI Demo
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGNING_ALLOWED: YES
   SwiftyAPITests:
     type: bundle.unit-test
     platform: macOS
@@ -70,6 +75,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.openapiview.SwiftyAPITests
+        CODE_SIGNING_ALLOWED: YES
 schemes:
   SwiftyAPIDemo:
     build:

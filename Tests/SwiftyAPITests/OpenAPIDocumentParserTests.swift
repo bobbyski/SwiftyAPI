@@ -29,3 +29,28 @@ func generatorCreatesSwiftCases() throws {
     #expect(generated.contains("case listPets = \"GET /pets\""))
     #expect(generated.contains("case createPet = \"POST /pets\""))
 }
+
+@Test
+func convertsJSONToYAML() throws {
+    let yaml = try OpenAPIFormatTranslator.convert(
+        source: OpenAPITemplates.minimalJSON,
+        from: .json,
+        to: .yaml
+    )
+
+    #expect(yaml.contains("openapi: 3.1.0"))
+    #expect(yaml.contains("title: Example API"))
+    #expect(try OpenAPIDocument(source: yaml, format: .yaml).summary.operations.count == 1)
+}
+
+@Test
+func convertsYAMLToJSON() throws {
+    let json = try OpenAPIFormatTranslator.convert(
+        source: OpenAPITemplates.minimalYAML,
+        from: .yaml,
+        to: .json
+    )
+
+    #expect(json.contains("\"openapi\" : \"3.1.0\""))
+    #expect(try OpenAPIDocument(source: json, format: .json).summary.operations.count == 2)
+}

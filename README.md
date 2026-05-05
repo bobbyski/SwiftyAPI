@@ -21,7 +21,7 @@ struct ContentView: View {
 }
 ```
 
-For document-based apps, use `OpenAPIFile` with SwiftUI `DocumentGroup` and pass its `source` and `format` into your editor flow.
+For the current diagnostic editor, use `SwiftyAPIDebugView`. The public `SwiftyAPIView` is intentionally minimal while the main interaction model is being designed.
 
 ## Commands
 
@@ -30,4 +30,8 @@ swift build
 swift test
 swift run swiftyapi-generate path/to/openapi.yaml
 swift run SwiftyAPIDemo
+xcodegen generate
+xcodebuild -project SwiftyAPI.xcodeproj -scheme SwiftyAPIDemo -destination platform=macOS build
 ```
+
+The generated Xcode project is configured for local macOS runs with ad-hoc signing (`CODE_SIGN_IDENTITY = -`), so it should build and run from Xcode without requiring a paid developer team or command-line signing overrides.
