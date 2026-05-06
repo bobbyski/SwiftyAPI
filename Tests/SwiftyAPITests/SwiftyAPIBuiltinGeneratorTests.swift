@@ -76,7 +76,9 @@ func swiftURLSessionGeneratorProducesClientAndModels() throws {
     #expect(method.requestExample.contains("// Referenced models"))
     #expect(method.requestExample.contains("public struct CreatePetRequest: Codable, Sendable"))
     #expect(method.requestExample.contains("public struct CreatePetResponse: Codable, Sendable"))
-    #expect(method.responseExample == "let decoded: CreatePetResponse")
+    #expect(method.responseExample.contains("let response = CreatePetResponse("))
+    #expect(method.responseExample.contains("id: 0"))
+    #expect(method.responseExample.contains("name: \"name\""))
 }
 
 @Test
@@ -109,7 +111,9 @@ func swiftVaporGeneratorProducesRoutesAndModels() throws {
     #expect(method.requestExample.contains("// Referenced models"))
     #expect(method.requestExample.contains("public struct CreatePetRequest: Codable, Sendable"))
     #expect(method.requestExample.contains("public struct CreatePetResponse: Codable, Sendable"))
-    #expect(method.responseExample == "return CreatePetResponse(/* TODO */)")
+    #expect(method.responseExample.contains("return CreatePetResponse("))
+    #expect(method.responseExample.contains("id: 0"))
+    #expect(method.responseExample.contains("name: \"name\""))
 }
 
 @Test

@@ -47,7 +47,7 @@ public struct SwiftyAPIURLSessionClientGenerator: SwiftyAPICodeGenerator {
             \(responseLine)
             \(referencedModels)
             """,
-            responseExample: helper.responseTypeName(for: operation).map { "let decoded: \($0)" } ?? "HTTP 204 / empty response"
+            responseExample: helper.responseModelObjectExample(for: operation, prefix: "let response = ") ?? "HTTP 204 / empty response"
         )
     }
 
@@ -177,7 +177,7 @@ public struct SwiftyAPIVaporServerGenerator: SwiftyAPICodeGenerator {
             }
             \(referencedModels)
             """,
-            responseExample: helper.responseTypeName(for: operation).map { "return \($0)(/* TODO */)" } ?? "return .noContent"
+            responseExample: helper.responseModelObjectExample(for: operation, prefix: "return ") ?? "return .noContent"
         )
     }
 
@@ -322,6 +322,27 @@ private struct SwiftyAPISwiftGeneratorHelper {
         return response.schemaName.map(typeName) ?? "\(typeName(methodName(for: operation)))Response"
     }
 
+    func responseModelObjectExample(for operation: OpenAPIOperation, prefix: String) -> String? {
+        guard let response = operation.responses.first(where: { $0.schemaFields.isEmpty == false }),
+              let responseType = responseTypeName(for: operation) else {
+            return nil
+        }
+
+        if response.schemaFields.isEmpty {
+            return "\(prefix)\(responseType)()"
+        }
+
+        let fieldLines = response.schemaFields.map { field in
+            "    \(variableName(field.name)): \(exampleValue(for: field))"
+        }
+
+        return """
+        \(prefix)\(responseType)(
+        \(fieldLines.joined(separator: ",\n"))
+        )
+        """
+    }
+
     func vaporPathSegments(for operation: OpenAPIOperation) -> String {
         let segments = operation.path
             .split(separator: "/")
@@ -376,6 +397,27 @@ private struct SwiftyAPISwiftGeneratorHelper {
             }
         }
         return "String"
+    }
+
+    private func exampleValue(for field: OpenAPISchemaField) -> String {
+        let type = field.type.lowercased()
+        let name = field.name.lowercased()
+
+        if type.contains("boolean") { return "true" }
+        if type.contains("integer") || type.contains("int64") { return "0" }
+        if type.contains("float") { return "0.0" }
+        if type.contains("number") || type.contains("double") { return "0.0" }
+        if type.contains("array") || type.hasPrefix("[") { return "[]" }
+        if type.contains("object") { return "[:]" }
+        if type.contains("date") || name.contains("date") || name.contains("time") {
+            switch options.dateStrategy {
+            case .date:
+                return "Date(timeIntervalSince1970: 0)"
+            case .string:
+                return "\"2026-05-05T00:00:00Z\""
+            }
+        }
+        return "\"\(field.name)\""
     }
 
     private func typeName(_ value: String) -> String {
