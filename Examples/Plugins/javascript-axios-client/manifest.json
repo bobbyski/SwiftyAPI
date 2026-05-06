@@ -1,0 +1,11 @@
+{
+  "name": "JavaScript Axios Client",
+  "description": "A heavily commented example plugin that generates a small JavaScript Axios client and design-view request/response examples.",
+  "language": "JavaScript",
+  "variation": "Axios",
+  "type": "client",
+  "author": "example",
+  "version": "1.0.0",
+  "entryPoint": "plugin.js",
+  "supportedOutputs": ["client", "model", "support"]
+}

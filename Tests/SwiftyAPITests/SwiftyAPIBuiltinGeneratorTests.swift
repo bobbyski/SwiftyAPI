@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import SwiftyAPI
 
@@ -395,6 +396,50 @@ func javaScriptCoreGeneratorRunsFullAndMethodGeneration() throws {
     #expect(method.responseExample == "handle GET /pets")
 }
 
+@Test
+func exampleJavaScriptAxiosPluginRunsAgainstSampleDocument() throws {
+    let document = try makeGeneratorDocument()
+    let operation = try #require(document.summary.operations.first)
+    let pluginURL = packageRootURL()
+        .appending(path: "Examples")
+        .appending(path: "Plugins")
+        .appending(path: "javascript-axios-client")
+        .appending(path: "plugin.js")
+    let source = try String(contentsOf: pluginURL, encoding: .utf8)
+    let generator = SwiftyAPIJavaScriptCoreGenerator(
+        manifest: SwiftyAPIJavaScriptGeneratorManifest(
+            name: "JavaScript Axios Client",
+            description: "A heavily commented example plugin.",
+            language: "JavaScript",
+            variation: "Axios",
+            type: "client",
+            author: "example",
+            version: "1.0.0",
+            entryPoint: "plugin.js",
+            supportedOutputs: [.client, .model, .support]
+        ),
+        source: source
+    )
+
+    let full = try generator.generateFull(from: document, options: SwiftyAPIGeneratorOptions())
+    #expect(full.files.contains { $0.path == "generated/client.js" && $0.contents.contains("export class ExampleAPIClient") })
+    #expect(full.files.contains { $0.path == "generated/models.js" && $0.contents.contains("export function createCreatePetRequest") })
+    #expect(full.diagnostics.first?.message == "Generated JavaScript Axios client with 1 operations.")
+
+    let method = try generator.generateMethod(
+        from: SwiftyAPIMethodGenerationContext(
+            title: document.summary.title,
+            version: document.summary.version,
+            serverURL: document.summary.servers.first,
+            operation: operation
+        ),
+        options: SwiftyAPIGeneratorOptions()
+    )
+    #expect(method.requestExample.contains("async function createPet(http, CreatePetRequest)"))
+    #expect(method.requestExample.contains("const result = await createPet"))
+    #expect(method.responseExample.contains("const CreatePetResponse ="))
+}
+
 private func makeGeneratorDocument() throws -> OpenAPIDocument {
     try OpenAPIDocument(
         source: """
@@ -435,4 +480,11 @@ private func makeGeneratorDocument() throws -> OpenAPIDocument {
         """,
         format: .yaml
     )
+}
+
+private func packageRootURL() -> URL {
+    URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
 }

@@ -21,13 +21,14 @@ public struct SwiftyAPIView: View {
     public init(
         source: String = OpenAPITemplates.minimalYAML,
         format: OpenAPIFormat = .yaml,
+        generators: [any SwiftyAPICodeGenerator] = SwiftyAPIBuiltinGenerators.all,
         onChange: @escaping (OpenAPIDocument) -> Void = { _ in }
     ) {
         self._source = State(initialValue: source)
         self._format = State(initialValue: format)
         self._selectedMode = State(initialValue: .design)
         self._selectedGeneratorKey = State(initialValue: SwiftyAPICurlExampleGenerator().registryKey)
-        self.generators = SwiftyAPIBuiltinGenerators.all
+        self.generators = generators
         self.onChange = onChange
     }
 
