@@ -6,8 +6,10 @@ public struct SwiftyAPIView: View {
     @State private var selectedMode: SwiftyAPIViewMode
     @State private var summary: OpenAPISummary?
     @State private var selectedOperationID: String?
+    @State private var selectedGeneratorKey: String
 
     private let onChange: (OpenAPIDocument) -> Void
+    private let generators: [any SwiftyAPICodeGenerator]
 
     public init(
         source: String = OpenAPITemplates.minimalYAML,
@@ -17,6 +19,8 @@ public struct SwiftyAPIView: View {
         self._source = State(initialValue: source)
         self._format = State(initialValue: format)
         self._selectedMode = State(initialValue: .design)
+        self._selectedGeneratorKey = State(initialValue: SwiftyAPICurlExampleGenerator().registryKey)
+        self.generators = SwiftyAPIBuiltinGenerators.all
         self.onChange = onChange
     }
 
@@ -52,6 +56,14 @@ public struct SwiftyAPIView: View {
                 }
 
                 Spacer()
+
+                Picker("Generator", selection: $selectedGeneratorKey) {
+                    ForEach(generatorChoices, id: \.key) { choice in
+                        Text(choice.title).tag(choice.key)
+                    }
+                }
+                .pickerStyle(.menu)
+                .frame(maxWidth: 260)
 
                 Picker("Format", selection: $format) {
                     ForEach(OpenAPIFormat.allCases, id: \.self) { format in
@@ -137,7 +149,7 @@ public struct SwiftyAPIView: View {
                 .scrollContentBackground(.hidden)
                 .padding(12)
         case .generated:
-            placeholder(title: "Generated Coming Soon")
+            generatedView
         }
     }
 
@@ -381,13 +393,13 @@ public struct SwiftyAPIView: View {
         VStack(spacing: 18) {
             darkCodePanel(
                 title: "Request",
-                subtitle: "Shell",
+                subtitle: selectedGenerator?.name ?? "Generator",
                 code: requestCodePreview
             )
 
             darkCodePanel(
                 title: "Response",
-                subtitle: "200 - Example 1",
+                subtitle: selectedGenerator?.language ?? "Example",
                 code: responseCodePreview
             )
         }
@@ -538,6 +550,93 @@ public struct SwiftyAPIView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    private var generatedView: some View {
+        let result = generatedPreview
+
+        return HStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(selectedGenerator?.name ?? "Generator")
+                    .font(.headline)
+                Text(selectedGenerator?.description ?? "No generator selected.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Divider()
+
+                if result.files.isEmpty {
+                    Text("No generated files.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(result.files, id: \.path) { file in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(file.path)
+                                .font(.callout)
+                                .fontWeight(.medium)
+                            Text(file.kind.rawValue)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color(nsColor: .controlBackgroundColor))
+                        )
+                    }
+                }
+
+                if result.diagnostics.isEmpty == false {
+                    Divider()
+                    Text("Diagnostics")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+
+                    ForEach(result.diagnostics.indices, id: \.self) { index in
+                        Text(result.diagnostics[index].message)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+            }
+            .frame(width: 300)
+            .padding(16)
+            .background(Color(nsColor: .controlBackgroundColor))
+
+            Divider()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    if result.files.isEmpty {
+                        placeholder(title: "No Generated Output")
+                    } else {
+                        ForEach(result.files, id: \.path) { file in
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text(file.path)
+                                    .font(.headline)
+                                Text(file.contents)
+                                    .font(.system(.caption, design: .monospaced))
+                                    .textSelection(.enabled)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(14)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(Color(nsColor: .textBackgroundColor))
+                                    )
+                            }
+                        }
+                    }
+                }
+                .padding(18)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .background(Color(nsColor: .windowBackgroundColor))
+        }
+    }
+
     private func translateSource(from oldFormat: OpenAPIFormat, to newFormat: OpenAPIFormat) {
         let detectedFormat = OpenAPIFormatTranslator.inferFormat(from: source, fallback: oldFormat)
         guard detectedFormat != newFormat else {
@@ -574,92 +673,61 @@ public struct SwiftyAPIView: View {
     }
 
     private var requestCodePreview: String {
-        guard let operation = selectedOperation else {
-            return ""
-        }
-
-        let baseURL = summary?.servers.first ?? "{{BASE_URL}}"
-        let queryParameters = operation.parameters.filter { $0.location == "query" }
-        let queryString = queryParameters.isEmpty ? "" : "?" + queryParameters.map { "\($0.name)={\($0.name)}" }.joined(separator: "&")
-        let contentType = operation.requestBody?.contentTypes.first
-        let bodyLine = operation.requestBody.map { " \\\n--data-raw '\(requestBodyExample(for: $0))'" } ?? ""
-        let headerLine = contentType.map { " \\\n--header 'Content-Type: \($0)'" } ?? ""
-
-        return """
-        curl --location --request \(operation.method.rawValue.uppercased()) '\(baseURL)\(operation.path)\(queryString)'\(headerLine)\(bodyLine)
-        """
-    }
-
-    private func requestBodyExample(for requestBody: OpenAPIRequestBody) -> String {
-        guard requestBody.schemaFields.isEmpty == false else {
-            return "{}"
-        }
-
-        let lines = requestBody.schemaFields.map { field in
-            "  \"\(field.name)\": \(exampleValue(for: field))"
-        }
-
-        return """
-        {
-        \(lines.joined(separator: ",\n"))
-        }
-        """
-    }
-
-    private func exampleValue(for field: OpenAPISchemaField) -> String {
-        let lowercasedName = field.name.lowercased()
-        let lowercasedType = field.type.lowercased()
-
-        if lowercasedType.hasPrefix("[") {
-            return "[]"
-        }
-
-        if lowercasedType.contains("boolean") {
-            return "true"
-        }
-
-        if lowercasedType.contains("integer") || lowercasedType.contains("number") {
-            return "0"
-        }
-
-        if lowercasedType.contains("object") || lowercasedType.first?.isUppercase == true {
-            return "{}"
-        }
-
-        if lowercasedName.contains("timestamp") || lowercasedName.contains("time") || lowercasedName.contains("date") {
-            return "\"2026-05-05T00:00:00Z\""
-        }
-
-        return "\"\(field.name)\""
+        methodExamplePreview.requestExample
     }
 
     private var responseCodePreview: String {
-        guard let response = selectedOperation?.responses.first else {
-            return "{}"
+        methodExamplePreview.responseExample
+    }
+
+    private var methodExamplePreview: SwiftyAPIMethodGeneratorResult {
+        guard let operation = selectedOperation else {
+            return SwiftyAPIMethodGeneratorResult()
         }
 
-        if response.statusCode == "204" || response.contentTypes.isEmpty {
-            return "HTTP \(response.statusCode) \(response.description ?? "No Content")"
+        let context = SwiftyAPIMethodGenerationContext(
+            title: summary?.title ?? "Untitled API",
+            version: summary?.version ?? "",
+            serverURL: summary?.servers.first,
+            operation: operation
+        )
+
+        return (try? (selectedGenerator ?? SwiftyAPICurlExampleGenerator()).generateMethod(
+            from: context,
+            options: SwiftyAPIGeneratorOptions()
+        )) ?? SwiftyAPIMethodGeneratorResult()
+    }
+
+    private var generatedPreview: SwiftyAPIGeneratorResult {
+        guard let document = try? OpenAPIDocument(source: source, format: format),
+              let generator = selectedGenerator else {
+            return SwiftyAPIGeneratorResult()
         }
 
-        guard response.schemaFields.isEmpty == false else {
-            return """
-            {
-              "status": "\(response.statusCode)",
-              "description": "\(response.description ?? "Response")"
-            }
-            """
-        }
+        return (try? generator.generateFull(
+            from: document,
+            options: SwiftyAPIGeneratorOptions()
+        )) ?? SwiftyAPIGeneratorResult(
+            diagnostics: [
+                SwiftyAPIGeneratorDiagnostic(
+                    severity: .error,
+                    message: "The selected generator could not produce output."
+                )
+            ]
+        )
+    }
 
-        let lines = response.schemaFields.map { field in
-            "  \"\(field.name)\": \(exampleValue(for: field))"
-        }
+    private var selectedGenerator: (any SwiftyAPICodeGenerator)? {
+        generators.first { $0.registryKey == selectedGeneratorKey } ?? generators.first
+    }
 
-        return """
-        {
-        \(lines.joined(separator: ",\n"))
+    private var generatorChoices: [GeneratorChoice] {
+        generators.map { generator in
+            GeneratorChoice(
+                key: generator.registryKey,
+                title: "\(generator.language) / \(generator.variation) / \(generator.type)"
+            )
         }
-        """
     }
 
     private func operationGroups(from operations: [OpenAPIOperation]) -> [OperationGroup] {
@@ -682,6 +750,11 @@ public struct SwiftyAPIView: View {
 private struct OperationGroup {
     var title: String
     var operations: [OpenAPIOperation]
+}
+
+private struct GeneratorChoice {
+    var key: String
+    var title: String
 }
 
 private extension OpenAPIParameter {

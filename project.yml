@@ -18,6 +18,8 @@ targets:
     platform: macOS
     sources:
       - path: Sources/SwiftyAPI
+    dependencies:
+      - sdk: JavaScriptCore.framework
     info:
       path: Generated/SwiftyAPI-Info.plist
       properties:

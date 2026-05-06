@@ -24,7 +24,10 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "SwiftyAPI"
+            name: "SwiftyAPI",
+            linkerSettings: [
+                .linkedFramework("JavaScriptCore")
+            ]
         ),
         .executableTarget(
             name: "SwiftyAPIDemo",
