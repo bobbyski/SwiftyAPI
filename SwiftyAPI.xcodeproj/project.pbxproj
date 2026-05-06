@@ -14,6 +14,7 @@
 		5AAEBF7E35C0CAFC0CF1BA81 /* SwiftyAPIJavaScriptCoreGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 666AEDE6348AA24CCD2FF164 /* SwiftyAPIJavaScriptCoreGenerator.swift */; };
 		7166F4DDAB63A21C3B0FC586 /* SwiftyAPI.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0F2BAC32111CEF496D2487CD /* SwiftyAPI.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		808A738C62345E853AB0E479 /* OpenAPIFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234ADCF75DDD7D200CE8F36 /* OpenAPIFile.swift */; };
+		886FF969B5BFA4B43D85D190 /* SwiftyAPIPythonDotNetGenerators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 204719516D1E0C4310A08326 /* SwiftyAPIPythonDotNetGenerators.swift */; };
 		8B5697B16258130BE9105029 /* SwiftyAPIDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93FC7C892DB45EA76031E899 /* SwiftyAPIDemoApp.swift */; };
 		92A9D5118967E27A9E7263C3 /* SwiftyAPI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0F2BAC32111CEF496D2487CD /* SwiftyAPI.framework */; };
 		9D6DFA65F5224A5DD173EFFC /* OpenAPIFormatTranslator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C0A176961C0863FF8A9A6F /* OpenAPIFormatTranslator.swift */; };
@@ -81,6 +82,7 @@
 		105FE2200012406D9E36C3CC /* SwiftyAPIBuiltinGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftyAPIBuiltinGeneratorTests.swift; sourceTree = "<group>"; };
 		1234ADCF75DDD7D200CE8F36 /* OpenAPIFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAPIFile.swift; sourceTree = "<group>"; };
 		1A985CAE7E1DF61FFC37CA84 /* SwiftEndpointGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftEndpointGenerator.swift; sourceTree = "<group>"; };
+		204719516D1E0C4310A08326 /* SwiftyAPIPythonDotNetGenerators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftyAPIPythonDotNetGenerators.swift; sourceTree = "<group>"; };
 		34E0F307AF3F29A1472B5BAB /* SwiftyAPIBuiltinGenerators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftyAPIBuiltinGenerators.swift; sourceTree = "<group>"; };
 		3D0D382959B61FADA032B829 /* petstore-swagger.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "petstore-swagger.json"; sourceTree = "<group>"; };
 		5DE63A7CE05A2D6B8F8A11D1 /* SwiftyAPICodeGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftyAPICodeGeneratorTests.swift; sourceTree = "<group>"; };
@@ -179,6 +181,7 @@
 				7AD4A4B8B66DFAB0F0A32EA3 /* SwiftyAPICodeGenerator.swift */,
 				6B13BAA47F73503F8267881B /* SwiftyAPIDebugView.swift */,
 				666AEDE6348AA24CCD2FF164 /* SwiftyAPIJavaScriptCoreGenerator.swift */,
+				204719516D1E0C4310A08326 /* SwiftyAPIPythonDotNetGenerators.swift */,
 				012A1C1D5296502C3E972E31 /* SwiftyAPISwiftGenerators.swift */,
 				ADC5415E2874CF110CA6B938 /* SwiftyAPITypeScriptGenerators.swift */,
 				EF80AA931F1AD8FFC9930E87 /* SwiftyAPIView.swift */,
@@ -355,6 +358,7 @@
 				E328EE57BC8664C221464152 /* SwiftyAPICodeGenerator.swift in Sources */,
 				158118E4E0F26E43017EA367 /* SwiftyAPIDebugView.swift in Sources */,
 				5AAEBF7E35C0CAFC0CF1BA81 /* SwiftyAPIJavaScriptCoreGenerator.swift in Sources */,
+				886FF969B5BFA4B43D85D190 /* SwiftyAPIPythonDotNetGenerators.swift in Sources */,
 				49DFA17B57D3106190AC844B /* SwiftyAPISwiftGenerators.swift in Sources */,
 				A55ABBAF342CFAE040A49A39 /* SwiftyAPITypeScriptGenerators.swift in Sources */,
 				E785EA454071A46A96C7ADCF /* SwiftyAPIView.swift in Sources */,

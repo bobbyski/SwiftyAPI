@@ -7,6 +7,7 @@ public struct SwiftyAPIView: View {
     @State private var summary: OpenAPISummary?
     @State private var selectedOperationID: String?
     @State private var selectedGeneratorKey: String
+    @State private var isGeneratorSelectorPresented = false
 
     private let onChange: (OpenAPIDocument) -> Void
     private let generators: [any SwiftyAPICodeGenerator]
@@ -57,13 +58,8 @@ public struct SwiftyAPIView: View {
 
                 Spacer()
 
-                Picker("Generator", selection: $selectedGeneratorKey) {
-                    ForEach(generatorChoices, id: \.key) { choice in
-                        Text(choice.title).tag(choice.key)
-                    }
-                }
-                .pickerStyle(.menu)
-                .frame(maxWidth: 260)
+                generatorSelector
+                    .frame(width: 330)
 
                 Picker("Format", selection: $format) {
                     ForEach(OpenAPIFormat.allCases, id: \.self) { format in
@@ -93,6 +89,125 @@ public struct SwiftyAPIView: View {
             }
         }
         .padding(12)
+    }
+
+    private var generatorSelector: some View {
+        Button {
+            isGeneratorSelectorPresented.toggle()
+        } label: {
+            HStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(selectedGenerator?.name ?? "Generator")
+                        .font(.callout)
+                        .fontWeight(.semibold)
+                        .lineLimit(1)
+
+                    HStack(spacing: 5) {
+                        if let selectedGenerator {
+                            generatorChip(selectedGenerator.language, color: languageTint(for: selectedGenerator.language))
+                            generatorChip(selectedGenerator.type.capitalized, color: typeTint(for: selectedGenerator.type))
+                        }
+                    }
+                }
+
+                Spacer(minLength: 8)
+
+                Image(systemName: "chevron.down")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: 7)
+                    .fill(Color(nsColor: .controlBackgroundColor))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 7)
+                    .stroke(Color(nsColor: .separatorColor))
+            )
+        }
+        .buttonStyle(.plain)
+        .popover(isPresented: $isGeneratorSelectorPresented, arrowEdge: .bottom) {
+            generatorSelectorPopover
+        }
+    }
+
+    private var generatorSelectorPopover: some View {
+        ScrollView {
+            VStack(spacing: 6) {
+                ForEach(generatorChoices, id: \.key) { choice in
+                    Button {
+                        selectedGeneratorKey = choice.key
+                        isGeneratorSelectorPresented = false
+                    } label: {
+                        generatorSelectorRow(choice)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(8)
+        }
+        .frame(width: 440)
+        .frame(maxHeight: 480)
+    }
+
+    private func generatorSelectorRow(_ choice: GeneratorChoice) -> some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(choice.name)
+                    .font(.callout)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+
+                Spacer(minLength: 8)
+
+                if choice.key == selectedGeneratorKey {
+                    Image(systemName: "checkmark")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(Color.accentColor)
+                }
+            }
+
+            Text(choice.description)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .multilineTextAlignment(.leading)
+
+            HStack(spacing: 6) {
+                generatorChip(choice.language, color: languageTint(for: choice.language))
+                generatorChip(choice.variation, color: variationTint(for: choice.variation))
+                generatorChip(choice.platform, color: platformTint(for: choice.platform))
+                generatorChip(choice.type.capitalized, color: typeTint(for: choice.type))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 7)
+                .fill(choice.key == selectedGeneratorKey ? Color.accentColor.opacity(0.10) : Color(nsColor: .textBackgroundColor))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 7)
+                .stroke(choice.key == selectedGeneratorKey ? Color.accentColor.opacity(0.45) : Color(nsColor: .separatorColor).opacity(0.65))
+        )
+    }
+
+    private func generatorChip(_ text: String, color: Color) -> some View {
+        Text(text)
+            .font(.caption2)
+            .fontWeight(.semibold)
+            .lineLimit(1)
+            .foregroundStyle(color)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(
+                Capsule()
+                    .fill(color.opacity(0.12))
+            )
     }
 
     private func metadataText(label: String, value: String) -> some View {
@@ -725,8 +840,83 @@ public struct SwiftyAPIView: View {
         generators.map { generator in
             GeneratorChoice(
                 key: generator.registryKey,
-                title: "\(generator.language) / \(generator.variation) / \(generator.type)"
+                name: generator.name,
+                description: generator.description,
+                language: generator.language,
+                variation: generator.variation,
+                platform: platformName(for: generator),
+                type: generator.type
             )
+        }
+    }
+
+    private func platformName(for generator: any SwiftyAPICodeGenerator) -> String {
+        let name = generator.name.lowercased()
+        let variation = generator.variation.lowercased()
+
+        if name.contains("curl") { return "Shell" }
+        if variation.contains("urlsession") { return "Apple" }
+        if variation.contains("vapor") { return "Vapor" }
+        if variation.contains("axios") { return "Web" }
+        if variation == "node" { return "Node.js" }
+        if variation.contains("httpx") { return "httpx" }
+        if variation.contains("fastapi") { return "FastAPI" }
+        if variation.contains("httpclient") { return ".NET" }
+        if variation.contains("asp.net") { return "ASP.NET" }
+        return generator.author.capitalized
+    }
+
+    private func languageTint(for language: String) -> Color {
+        switch language.lowercased() {
+        case "swift":
+            return Color(red: 0.92, green: 0.25, blue: 0.12)
+        case "typescript", "javascript":
+            return Color(red: 0.18, green: 0.43, blue: 0.92)
+        case "python":
+            return Color(red: 0.13, green: 0.48, blue: 0.30)
+        case "c#":
+            return Color(red: 0.47, green: 0.25, blue: 0.82)
+        case "curl":
+            return Color(red: 0.46, green: 0.50, blue: 0.56)
+        default:
+            return .accentColor
+        }
+    }
+
+    private func typeTint(for type: String) -> Color {
+        switch type.lowercased() {
+        case "client":
+            return Color(red: 0.04, green: 0.54, blue: 0.78)
+        case "server":
+            return Color(red: 0.72, green: 0.31, blue: 0.09)
+        default:
+            return .secondary
+        }
+    }
+
+    private func variationTint(for variation: String) -> Color {
+        let lowercased = variation.lowercased()
+        if lowercased.contains("vapor") || lowercased.contains("fastapi") || lowercased.contains("asp.net") {
+            return Color(red: 0.63, green: 0.33, blue: 0.78)
+        }
+        if lowercased.contains("axios") || lowercased.contains("httpx") || lowercased.contains("httpclient") || lowercased.contains("urlsession") {
+            return Color(red: 0.18, green: 0.45, blue: 0.66)
+        }
+        return Color(red: 0.42, green: 0.46, blue: 0.54)
+    }
+
+    private func platformTint(for platform: String) -> Color {
+        switch platform.lowercased() {
+        case "apple":
+            return Color(red: 0.33, green: 0.36, blue: 0.42)
+        case "node.js", "web":
+            return Color(red: 0.16, green: 0.48, blue: 0.24)
+        case "vapor", "fastapi", "asp.net":
+            return Color(red: 0.55, green: 0.24, blue: 0.70)
+        case ".net":
+            return Color(red: 0.42, green: 0.22, blue: 0.78)
+        default:
+            return Color(red: 0.44, green: 0.47, blue: 0.52)
         }
     }
 
@@ -754,7 +944,12 @@ private struct OperationGroup {
 
 private struct GeneratorChoice {
     var key: String
-    var title: String
+    var name: String
+    var description: String
+    var language: String
+    var variation: String
+    var platform: String
+    var type: String
 }
 
 private extension OpenAPIParameter {

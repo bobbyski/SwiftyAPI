@@ -196,6 +196,141 @@ func typeScriptNodeGeneratorProducesServerAndModels() throws {
 }
 
 @Test
+func pythonHTTPXGeneratorProducesClientAndModels() throws {
+    let document = try makeGeneratorDocument()
+    let operation = try #require(document.summary.operations.first)
+    let generator = SwiftyAPIPythonHTTPXClientGenerator()
+
+    let full = try generator.generateFull(from: document, options: SwiftyAPIGeneratorOptions())
+    let models = try #require(full.files.first { $0.path == "generated/models.py" })
+    let client = try #require(full.files.first { $0.path == "generated/client.py" })
+
+    #expect(models.contents.contains("class CreatePetRequest(BaseModel):"))
+    #expect(models.contents.contains("name: str | None = None"))
+    #expect(models.contents.contains("age: int | None = None"))
+    #expect(models.contents.contains("class CreatePetResponse(BaseModel):"))
+    #expect(client.contents.contains("import httpx"))
+    #expect(client.contents.contains("class ExampleAPIClient:"))
+    #expect(client.contents.contains("async def create_pet(self, body: CreatePetRequest) -> CreatePetResponse:"))
+    #expect(client.contents.contains("response = await self._client.post(\"/pets\", json=body.model_dump(exclude_none=True))"))
+    #expect(client.contents.contains("return CreatePetResponse.model_validate(response.json())"))
+
+    let method = try generator.generateMethod(
+        from: SwiftyAPIMethodGenerationContext(
+            title: document.summary.title,
+            version: document.summary.version,
+            serverURL: document.summary.servers.first,
+            operation: operation
+        ),
+        options: SwiftyAPIGeneratorOptions()
+    )
+    #expect(method.requestExample.contains("client = ExampleAPIClient(base_url=\"https://api.example.com\")"))
+    #expect(method.requestExample.contains("response = await client.create_pet(body=CreatePetRequest(name=\"name\", age=0))"))
+    #expect(method.requestExample.contains("# Referenced models"))
+    #expect(method.requestExample.contains("class CreatePetRequest(BaseModel):"))
+    #expect(method.requestExample.contains("class CreatePetResponse(BaseModel):"))
+    #expect(method.responseExample.contains("response = CreatePetResponse(id=0, name=\"name\")"))
+}
+
+@Test
+func pythonFastAPIGeneratorProducesServerAndModels() throws {
+    let document = try makeGeneratorDocument()
+    let operation = try #require(document.summary.operations.first)
+    let generator = SwiftyAPIPythonFastAPIServerGenerator()
+
+    let full = try generator.generateFull(from: document, options: SwiftyAPIGeneratorOptions())
+    let models = try #require(full.files.first { $0.path == "generated/models.py" })
+    let server = try #require(full.files.first { $0.path == "generated/server.py" })
+
+    #expect(models.contents.contains("class CreatePetRequest(BaseModel):"))
+    #expect(models.contents.contains("class CreatePetResponse(BaseModel):"))
+    #expect(server.contents.contains("from fastapi import APIRouter, Response"))
+    #expect(server.contents.contains("router = APIRouter()"))
+    #expect(server.contents.contains("@router.post(\"/pets\", response_model=CreatePetResponse)"))
+    #expect(server.contents.contains("async def create_pet(body: CreatePetRequest) -> CreatePetResponse:"))
+
+    let method = try generator.generateMethod(
+        from: SwiftyAPIMethodGenerationContext(
+            title: document.summary.title,
+            version: document.summary.version,
+            operation: operation
+        ),
+        options: SwiftyAPIGeneratorOptions()
+    )
+    #expect(method.requestExample.contains("@router.post(\"/pets\", response_model=CreatePetResponse)"))
+    #expect(method.requestExample.contains("async def create_pet(body: CreatePetRequest) -> CreatePetResponse:"))
+    #expect(method.requestExample.contains("# Referenced models"))
+    #expect(method.requestExample.contains("class CreatePetRequest(BaseModel):"))
+    #expect(method.responseExample.contains("return CreatePetResponse(id=0, name=\"name\")"))
+}
+
+@Test
+func dotNetHTTPClientGeneratorProducesClientAndModels() throws {
+    let document = try makeGeneratorDocument()
+    let operation = try #require(document.summary.operations.first)
+    let generator = SwiftyAPIDotNetHTTPClientGenerator()
+
+    let full = try generator.generateFull(from: document, options: SwiftyAPIGeneratorOptions())
+    let models = try #require(full.files.first { $0.path == "Generated/Models.cs" })
+    let client = try #require(full.files.first { $0.path == "Generated/ApiClient.cs" })
+
+    #expect(models.contents.contains("public sealed record CreatePetRequest(string Name, int Age);"))
+    #expect(models.contents.contains("public sealed record CreatePetResponse(int Id, string Name);"))
+    #expect(client.contents.contains("using System.Net.Http.Json;"))
+    #expect(client.contents.contains("public sealed class ExampleAPIClient"))
+    #expect(client.contents.contains("public async Task<CreatePetResponse> CreatePetAsync(CreatePetRequest body)"))
+    #expect(client.contents.contains("var response = await _http.PostAsJsonAsync(\"/pets\", body);"))
+    #expect(client.contents.contains("return result ?? throw new InvalidOperationException"))
+
+    let method = try generator.generateMethod(
+        from: SwiftyAPIMethodGenerationContext(
+            title: document.summary.title,
+            version: document.summary.version,
+            serverURL: document.summary.servers.first,
+            operation: operation
+        ),
+        options: SwiftyAPIGeneratorOptions()
+    )
+    #expect(method.requestExample.contains("var client = new ExampleAPIClient(new HttpClient { BaseAddress = new Uri(\"https://api.example.com\") });"))
+    #expect(method.requestExample.contains("var response = await client.CreatePetAsync(new CreatePetRequest(\"name\", 0));"))
+    #expect(method.requestExample.contains("// Referenced models"))
+    #expect(method.requestExample.contains("public sealed record CreatePetRequest(string Name, int Age);"))
+    #expect(method.responseExample.contains("var response = new CreatePetResponse(0, \"name\");"))
+}
+
+@Test
+func dotNetMinimalAPIGeneratorProducesServerAndModels() throws {
+    let document = try makeGeneratorDocument()
+    let operation = try #require(document.summary.operations.first)
+    let generator = SwiftyAPIDotNetMinimalAPIServerGenerator()
+
+    let full = try generator.generateFull(from: document, options: SwiftyAPIGeneratorOptions())
+    let models = try #require(full.files.first { $0.path == "Generated/Models.cs" })
+    let endpoints = try #require(full.files.first { $0.path == "Generated/Endpoints.cs" })
+
+    #expect(models.contents.contains("public sealed record CreatePetRequest(string Name, int Age);"))
+    #expect(models.contents.contains("public sealed record CreatePetResponse(int Id, string Name);"))
+    #expect(endpoints.contents.contains("public interface IExampleAPIServerHandlers"))
+    #expect(endpoints.contents.contains("Task<CreatePetResponse> CreatePetAsync(CreatePetRequest body);"))
+    #expect(endpoints.contents.contains("app.MapPost(\"/pets\", async (CreatePetRequest body, IExampleAPIServerHandlers handlers) =>"))
+    #expect(endpoints.contents.contains("Results.Ok(await handlers.CreatePetAsync(body)))"))
+
+    let method = try generator.generateMethod(
+        from: SwiftyAPIMethodGenerationContext(
+            title: document.summary.title,
+            version: document.summary.version,
+            operation: operation
+        ),
+        options: SwiftyAPIGeneratorOptions()
+    )
+    #expect(method.requestExample.contains("app.MapPost(\"/pets\", async (CreatePetRequest body, IExampleAPIServerHandlers handlers) =>"))
+    #expect(method.requestExample.contains("Results.Ok(await handlers.CreatePetAsync(body)))"))
+    #expect(method.requestExample.contains("// Referenced models"))
+    #expect(method.requestExample.contains("public sealed record CreatePetResponse(int Id, string Name);"))
+    #expect(method.responseExample.contains("return new CreatePetResponse(0, \"name\");"))
+}
+
+@Test
 func javaScriptCoreGeneratorRunsFullAndMethodGeneration() throws {
     let document = try OpenAPIDocument(source: OpenAPITemplates.minimalYAML, format: .yaml)
     let operation = try #require(document.summary.operations.first)

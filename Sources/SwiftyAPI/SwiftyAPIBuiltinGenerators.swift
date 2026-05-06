@@ -8,38 +8,10 @@ public enum SwiftyAPIBuiltinGenerators {
             SwiftyAPIVaporServerGenerator(),
             SwiftyAPITypeScriptAxiosClientGenerator(),
             SwiftyAPITypeScriptNodeServerGenerator(),
-            SwiftyAPITemplateCodeGenerator(
-                name: "Python httpx Client",
-                description: "Generates a Python client that uses httpx for sync or async HTTP transport and Pydantic models for typed request and response payloads.",
-                language: "Python",
-                variation: "httpx + Pydantic",
-                type: "client",
-                supportedOutputs: [.client, .model, .request, .support]
-            ),
-            SwiftyAPITemplateCodeGenerator(
-                name: "Python FastAPI Server",
-                description: "Generates Python server scaffolding for FastAPI, including routers, Pydantic request and response models, and handler stubs for each operation.",
-                language: "Python",
-                variation: "FastAPI + Pydantic",
-                type: "server",
-                supportedOutputs: [.model, .request, .support]
-            ),
-            SwiftyAPITemplateCodeGenerator(
-                name: ".NET HttpClient Client",
-                description: "Generates a C# client that uses HttpClient, System.Text.Json models, and task-based async methods for each OpenAPI operation.",
-                language: "C#",
-                variation: "HttpClient + System.Text.Json",
-                type: "client",
-                supportedOutputs: [.client, .model, .request, .support]
-            ),
-            SwiftyAPITemplateCodeGenerator(
-                name: ".NET ASP.NET Core Server",
-                description: "Generates C# server scaffolding for ASP.NET Core Minimal APIs, including endpoint mapping, request records, response records, and handler stubs.",
-                language: "C#",
-                variation: "ASP.NET Core Minimal API",
-                type: "server",
-                supportedOutputs: [.model, .request, .support]
-            )
+            SwiftyAPIPythonHTTPXClientGenerator(),
+            SwiftyAPIPythonFastAPIServerGenerator(),
+            SwiftyAPIDotNetHTTPClientGenerator(),
+            SwiftyAPIDotNetMinimalAPIServerGenerator()
         ]
     }
 
