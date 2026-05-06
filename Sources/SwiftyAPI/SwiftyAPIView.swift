@@ -1222,12 +1222,10 @@ public struct SwiftyAPIView: View {
         switch code {
         case 200..<300:
             return .green
-        case 300..<400:
-            return .blue
         case 400..<500:
-            return .orange
-        default:
             return .red
+        default:
+            return .orange
         }
     }
 
