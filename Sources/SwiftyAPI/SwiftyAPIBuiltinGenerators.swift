@@ -6,22 +6,8 @@ public enum SwiftyAPIBuiltinGenerators {
             SwiftyAPICurlExampleGenerator(),
             SwiftyAPIURLSessionClientGenerator(),
             SwiftyAPIVaporServerGenerator(),
-            SwiftyAPITemplateCodeGenerator(
-                name: "TypeScript Axios Client",
-                description: "Generates a TypeScript client that uses axios for HTTP transport, typed request parameters, typed response payloads, and operation functions.",
-                language: "TypeScript",
-                variation: "axios",
-                type: "client",
-                supportedOutputs: [.client, .model, .request, .support]
-            ),
-            SwiftyAPITemplateCodeGenerator(
-                name: "TypeScript Node Server",
-                description: "Generates TypeScript server scaffolding for Node.js, including route declarations, typed handler signatures, and request/response model types.",
-                language: "TypeScript",
-                variation: "node",
-                type: "server",
-                supportedOutputs: [.model, .request, .support]
-            ),
+            SwiftyAPITypeScriptAxiosClientGenerator(),
+            SwiftyAPITypeScriptNodeServerGenerator(),
             SwiftyAPITemplateCodeGenerator(
                 name: "Python httpx Client",
                 description: "Generates a Python client that uses httpx for sync or async HTTP transport and Pydantic models for typed request and response payloads.",

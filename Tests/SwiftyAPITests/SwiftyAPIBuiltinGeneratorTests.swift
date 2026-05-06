@@ -117,6 +117,85 @@ func swiftVaporGeneratorProducesRoutesAndModels() throws {
 }
 
 @Test
+func typeScriptAxiosGeneratorProducesClientAndModels() throws {
+    let document = try makeGeneratorDocument()
+    let operation = try #require(document.summary.operations.first)
+    let generator = SwiftyAPITypeScriptAxiosClientGenerator()
+
+    let full = try generator.generateFull(from: document, options: SwiftyAPIGeneratorOptions())
+    let models = try #require(full.files.first { $0.path == "generated/models.ts" })
+    let client = try #require(full.files.first { $0.path == "generated/client.ts" })
+
+    #expect(models.contents.contains("export interface CreatePetRequest"))
+    #expect(models.contents.contains("name?: string;"))
+    #expect(models.contents.contains("age?: number;"))
+    #expect(models.contents.contains("export interface CreatePetResponse"))
+    #expect(client.contents.contains("import axios, { AxiosInstance } from \"axios\";"))
+    #expect(client.contents.contains("export class ExampleAPIClient"))
+    #expect(client.contents.contains("async createPet(body: CreatePetRequest): Promise<CreatePetResponse>"))
+    #expect(client.contents.contains("const response = await this.http.post<CreatePetResponse>(path, body"))
+    #expect(client.contents.contains("return response.data;"))
+
+    let method = try generator.generateMethod(
+        from: SwiftyAPIMethodGenerationContext(
+            title: document.summary.title,
+            version: document.summary.version,
+            serverURL: document.summary.servers.first,
+            operation: operation
+        ),
+        options: SwiftyAPIGeneratorOptions()
+    )
+    #expect(method.requestExample.contains("const client = new ExampleAPIClient(\"https://api.example.com\");"))
+    #expect(method.requestExample.contains("const response = await client.createPet({"))
+    #expect(method.requestExample.contains("satisfies CreatePetRequest"))
+    #expect(method.requestExample.contains("// Referenced models"))
+    #expect(method.requestExample.contains("export interface CreatePetRequest"))
+    #expect(method.requestExample.contains("export interface CreatePetResponse"))
+    #expect(method.responseExample.contains("const response = {"))
+    #expect(method.responseExample.contains("id: 0"))
+    #expect(method.responseExample.contains("name: \"name\""))
+    #expect(method.responseExample.contains("satisfies CreatePetResponse"))
+}
+
+@Test
+func typeScriptNodeGeneratorProducesServerAndModels() throws {
+    let document = try makeGeneratorDocument()
+    let operation = try #require(document.summary.operations.first)
+    let generator = SwiftyAPITypeScriptNodeServerGenerator()
+
+    let full = try generator.generateFull(from: document, options: SwiftyAPIGeneratorOptions())
+    let models = try #require(full.files.first { $0.path == "generated/models.ts" })
+    let server = try #require(full.files.first { $0.path == "generated/server.ts" })
+
+    #expect(models.contents.contains("export interface CreatePetRequest"))
+    #expect(models.contents.contains("export interface CreatePetResponse"))
+    #expect(server.contents.contains("import { createServer, IncomingMessage } from \"node:http\";"))
+    #expect(server.contents.contains("export interface ExampleAPIServerHandlers"))
+    #expect(server.contents.contains("createPet(request: NodeAPIRequest): Promise<NodeAPIResponse<CreatePetResponse>>;"))
+    #expect(server.contents.contains("{ method: \"POST\", path: \"/pets\", handler: handlers.createPet.bind(handlers) },"))
+    #expect(server.contents.contains("async function readJSONBody"))
+
+    let method = try generator.generateMethod(
+        from: SwiftyAPIMethodGenerationContext(
+            title: document.summary.title,
+            version: document.summary.version,
+            operation: operation
+        ),
+        options: SwiftyAPIGeneratorOptions()
+    )
+    #expect(method.requestExample.contains("method: \"POST\""))
+    #expect(method.requestExample.contains("path: \"/pets\""))
+    #expect(method.requestExample.contains("handler: handlers.createPet"))
+    #expect(method.requestExample.contains("// Referenced models"))
+    #expect(method.requestExample.contains("export interface CreatePetRequest"))
+    #expect(method.requestExample.contains("export interface CreatePetResponse"))
+    #expect(method.responseExample.contains("return {"))
+    #expect(method.responseExample.contains("id: 0"))
+    #expect(method.responseExample.contains("name: \"name\""))
+    #expect(method.responseExample.contains("satisfies CreatePetResponse"))
+}
+
+@Test
 func javaScriptCoreGeneratorRunsFullAndMethodGeneration() throws {
     let document = try OpenAPIDocument(source: OpenAPITemplates.minimalYAML, format: .yaml)
     let operation = try #require(document.summary.operations.first)
