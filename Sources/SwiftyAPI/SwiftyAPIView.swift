@@ -28,6 +28,7 @@ public struct SwiftyAPIView: View {
     @State private var isEditingOperation = false
     @State private var pendingDelete: OperationDeleteTarget?
     @State private var customGroups: [String] = []
+    @State private var selectedGeneratedFilePath: String?
 
     private let onChange: (OpenAPIDocument) -> Void
     private let generators: [any SwiftyAPICodeGenerator]
@@ -1288,11 +1289,26 @@ public struct SwiftyAPIView: View {
 
     private var generatedView: some View {
         let result = generatedPreview
+        let selectedFile = selectedGeneratedFile(in: result.files)
 
         return HStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 12) {
-                Text(selectedGenerator?.name ?? "Generator")
-                    .font(.headline)
+                HStack {
+                    Text(selectedGenerator?.name ?? "Generator")
+                        .font(.headline)
+
+                    Spacer()
+
+                    #if os(macOS)
+                    Button {
+                        exportGeneratedFilesAsZip(result.files)
+                    } label: {
+                        Label("Export ZIP", systemImage: "archivebox")
+                    }
+                    .disabled(result.files.isEmpty)
+                    #endif
+                }
+
                 Text(selectedGenerator?.description ?? "No generator selected.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
@@ -1306,20 +1322,27 @@ public struct SwiftyAPIView: View {
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(result.files, id: \.path) { file in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(file.path)
-                                .font(.callout)
-                                .fontWeight(.medium)
-                            Text(file.kind.rawValue)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                        Button {
+                            selectedGeneratedFilePath = file.path
+                        } label: {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(file.path)
+                                    .font(.callout)
+                                    .fontWeight(.medium)
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                                Text(file.kind.rawValue)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(selectedFile?.path == file.path ? Color.accentColor.opacity(0.12) : Color(nsColor: .controlBackgroundColor))
+                            )
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(Color(nsColor: .controlBackgroundColor))
-                        )
+                        .buttonStyle(.plain)
                     }
                 }
 
@@ -1344,37 +1367,49 @@ public struct SwiftyAPIView: View {
 
             Divider()
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
-                    if result.files.isEmpty {
-                        placeholder(title: "No Generated Output")
-                    } else {
-                        ForEach(result.files, id: \.path) { file in
-                            VStack(alignment: .leading, spacing: 10) {
-                                Text(file.path)
-                                    .font(.headline)
-                                SwiftyAPIMonacoEditor(
-                                    text: .constant(file.contents),
-                                    language: monacoLanguage(forPath: file.path),
-                                    theme: systemMonacoTheme,
-                                    showsGutter: true,
-                                    isEditable: false
-                                )
-                                .frame(minHeight: generatedEditorHeight(for: file.contents))
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
-                                )
-                            }
-                        }
+            VStack(alignment: .leading, spacing: 12) {
+                if let selectedFile {
+                    HStack {
+                        Text(selectedFile.path)
+                            .font(.headline)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Spacer()
+                        Text(selectedFile.kind.rawValue)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
+
+                    SwiftyAPIMonacoEditor(
+                        text: .constant(selectedFile.contents),
+                        language: monacoLanguage(forPath: selectedFile.path),
+                        theme: systemMonacoTheme,
+                        showsGutter: true,
+                        isEditable: false
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
+                    )
+                } else {
+                    placeholder(title: "No Generated Output")
                 }
-                .padding(18)
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .padding(18)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(Color(nsColor: .windowBackgroundColor))
         }
+    }
+
+    private func selectedGeneratedFile(in files: [SwiftyAPIGeneratedFile]) -> SwiftyAPIGeneratedFile? {
+        if let selectedGeneratedFilePath,
+           let selected = files.first(where: { $0.path == selectedGeneratedFilePath }) {
+            return selected
+        }
+
+        return files.first
     }
 
     private func translateSource(from oldFormat: OpenAPIFormat, to newFormat: OpenAPIFormat) {
@@ -1441,6 +1476,50 @@ public struct SwiftyAPIView: View {
         try? source.write(to: url, atomically: true, encoding: .utf8)
     }
 
+    private func exportGeneratedFilesAsZip(_ files: [SwiftyAPIGeneratedFile]) {
+        guard files.isEmpty == false else {
+            return
+        }
+
+        let panel = NSSavePanel()
+        panel.title = "Export Generated Code"
+        panel.allowedContentTypes = [UTType(filenameExtension: "zip") ?? .archive]
+        panel.nameFieldStringValue = defaultGeneratedZipFilename
+
+        guard panel.runModal() == .OK,
+              let destinationURL = panel.url else {
+            return
+        }
+
+        let fileManager = FileManager.default
+        let exportRoot = fileManager.temporaryDirectory
+            .appendingPathComponent("SwiftyAPIExport-\(UUID().uuidString)", isDirectory: true)
+
+        do {
+            try fileManager.createDirectory(at: exportRoot, withIntermediateDirectories: true)
+            defer { try? fileManager.removeItem(at: exportRoot) }
+
+            for file in files {
+                let fileURL = exportRoot.appendingPathComponent(sanitizedGeneratedPath(file.path), isDirectory: false)
+                try fileManager.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try file.contents.write(to: fileURL, atomically: true, encoding: .utf8)
+            }
+
+            if fileManager.fileExists(atPath: destinationURL.path) {
+                try fileManager.removeItem(at: destinationURL)
+            }
+
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/zip")
+            process.currentDirectoryURL = exportRoot
+            process.arguments = ["-qr", destinationURL.path, "."]
+            try process.run()
+            process.waitUntilExit()
+        } catch {
+            return
+        }
+    }
+
     private static var openAPIContentTypes: [UTType] {
         [
             .json,
@@ -1473,6 +1552,31 @@ public struct SwiftyAPIView: View {
         case .yaml:
             return "\(resolvedBaseName).yaml"
         }
+    }
+
+    private var defaultGeneratedZipFilename: String {
+        let baseName = (summary?.title ?? "swiftyapi-generated")
+            .lowercased()
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { $0.isEmpty == false }
+            .joined(separator: "-")
+
+        let generatorName = (selectedGenerator?.name ?? "generated")
+            .lowercased()
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { $0.isEmpty == false }
+            .joined(separator: "-")
+
+        return "\(baseName.isEmpty ? "swiftyapi" : baseName)-\(generatorName.isEmpty ? "generated" : generatorName).zip"
+    }
+
+    private func sanitizedGeneratedPath(_ path: String) -> String {
+        let rawComponents = path.split(separator: "/").map { String($0) }
+        let components = rawComponents.filter { component in
+            component.isEmpty == false && component != "." && component != ".."
+        }
+
+        return components.isEmpty ? "Generated.txt" : components.joined(separator: "/")
     }
     #endif
 
