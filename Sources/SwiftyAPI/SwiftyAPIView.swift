@@ -447,9 +447,16 @@ public struct SwiftyAPIView: View {
                 }
 
                 requestCard
+                sectionSeparator
                 responsesCard
             }
         )
+    }
+
+    private var sectionSeparator: some View {
+        Rectangle()
+            .fill(Color(nsColor: .separatorColor).opacity(0.75))
+            .frame(height: 1)
     }
 
     private var requestCard: some View {
@@ -476,34 +483,20 @@ public struct SwiftyAPIView: View {
 
             Divider()
 
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 0) {
                 if parameters.isEmpty, requestBody == nil {
                     Text("No request parameters or body are defined for this operation.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
+                        .padding(.vertical, 2)
                 } else {
-                    ForEach(parameters, id: \.displayID) { parameter in
-                        parameterRow(
-                            name: parameter.name,
-                            type: parameter.type ?? parameter.location,
-                            detail: parameterDetail(parameter)
-                        )
-                    }
+                    ForEach(requestDisplayRows(parameters: parameters, requestBody: requestBody), id: \.id) { row in
+                        parameterRow(name: row.name, type: row.type, detail: row.detail)
+                            .padding(.leading, row.indent)
+                            .padding(.vertical, 10)
 
-                    if let requestBody {
-                        parameterRow(
-                            name: requestBody.schemaName ?? "body",
-                            type: requestBody.contentTypes.first ?? "object",
-                            detail: requestBodyDetail(requestBody)
-                        )
-
-                        ForEach(requestBody.schemaFields, id: \.displayID) { field in
-                            parameterRow(
-                                name: field.name,
-                                type: field.type,
-                                detail: schemaFieldDetail(field)
-                            )
-                            .padding(.leading, 16)
+                        if row.id != requestDisplayRows(parameters: parameters, requestBody: requestBody).last?.id {
+                            Divider()
                         }
                     }
                 }
@@ -533,26 +526,20 @@ public struct SwiftyAPIView: View {
 
             Divider()
 
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 0) {
                 if responses.isEmpty {
                     Text("No responses are defined for this operation.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
+                        .padding(.vertical, 2)
                 } else {
-                    ForEach(responses, id: \.statusCode) { response in
-                        parameterRow(
-                            name: response.statusCode,
-                            type: response.schemaName ?? response.contentTypes.first ?? "response",
-                            detail: response.description ?? "No response description."
-                        )
+                    ForEach(responseDisplayRows(responses), id: \.id) { row in
+                        parameterRow(name: row.name, type: row.type, detail: row.detail)
+                            .padding(.leading, row.indent)
+                            .padding(.vertical, 10)
 
-                        ForEach(response.schemaFields, id: \.displayID) { field in
-                            parameterRow(
-                                name: field.name,
-                                type: field.type,
-                                detail: schemaFieldDetail(field)
-                            )
-                            .padding(.leading, 16)
+                        if row.id != responseDisplayRows(responses).last?.id {
+                            Divider()
                         }
                     }
                 }
@@ -650,6 +637,63 @@ public struct SwiftyAPIView: View {
             parts.append(description)
         }
         return parts.isEmpty ? "schema property" : parts.joined(separator: " · ")
+    }
+
+    private func requestDisplayRows(parameters: [OpenAPIParameter], requestBody: OpenAPIRequestBody?) -> [DetailRow] {
+        var rows = parameters.map { parameter in
+            DetailRow(
+                id: parameter.displayID,
+                name: parameter.name,
+                type: parameter.type ?? parameter.location,
+                detail: parameterDetail(parameter)
+            )
+        }
+
+        if let requestBody {
+            rows.append(
+                DetailRow(
+                    id: "request-body",
+                    name: requestBody.schemaName ?? "body",
+                    type: requestBody.contentTypes.first ?? "object",
+                    detail: requestBodyDetail(requestBody)
+                )
+            )
+
+            rows.append(
+                contentsOf: requestBody.schemaFields.map { field in
+                    DetailRow(
+                        id: "request-body-\(field.displayID)",
+                        name: field.name,
+                        type: field.type,
+                        detail: schemaFieldDetail(field),
+                        indent: 16
+                    )
+                }
+            )
+        }
+
+        return rows
+    }
+
+    private func responseDisplayRows(_ responses: [OpenAPIResponse]) -> [DetailRow] {
+        responses.flatMap { response in
+            [
+                DetailRow(
+                    id: "response-\(response.statusCode)",
+                    name: response.statusCode,
+                    type: response.schemaName ?? response.contentTypes.first ?? "response",
+                    detail: response.description ?? "No response description."
+                )
+            ] + response.schemaFields.map { field in
+                DetailRow(
+                    id: "response-\(response.statusCode)-\(field.displayID)",
+                    name: field.name,
+                    type: field.type,
+                    detail: schemaFieldDetail(field),
+                    indent: 16
+                )
+            }
+        }
     }
 
     private func responseTint(for statusCode: String) -> Color {
@@ -1064,6 +1108,14 @@ public struct SwiftyAPIView: View {
 private struct OperationGroup {
     var title: String
     var operations: [OpenAPIOperation]
+}
+
+private struct DetailRow {
+    var id: String
+    var name: String
+    var type: String
+    var detail: String
+    var indent: CGFloat = 0
 }
 
 private struct GeneratorChoice {
