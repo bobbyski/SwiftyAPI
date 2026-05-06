@@ -24,11 +24,18 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "SwiftyAPI"
+            name: "SwiftyAPI",
+            linkerSettings: [
+                .linkedFramework("JavaScriptCore"),
+                .linkedFramework("WebKit")
+            ]
         ),
         .executableTarget(
             name: "SwiftyAPIDemo",
-            dependencies: ["SwiftyAPI"]
+            dependencies: ["SwiftyAPI"],
+            resources: [
+                .process("Resources")
+            ]
         ),
         .executableTarget(
             name: "SwiftyAPIGenerator",
