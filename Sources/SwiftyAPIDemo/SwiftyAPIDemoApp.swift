@@ -7,6 +7,20 @@ struct SwiftyAPIDemoApp: App {
         WindowGroup {
             SwiftyAPIDemoRootView()
         }
+        .defaultSize(width: 1320, height: 820)
+        .commands {
+            CommandGroup(after: .newItem) {
+                Button("Load OpenAPI Document...") {
+                    NotificationCenter.default.post(name: .swiftyAPILoadDocument, object: nil)
+                }
+                .keyboardShortcut("o")
+
+                Button("Save OpenAPI Document") {
+                    NotificationCenter.default.post(name: .swiftyAPISaveDocument, object: nil)
+                }
+                .keyboardShortcut("s")
+            }
+        }
     }
 }
 
@@ -32,7 +46,7 @@ private struct SwiftyAPIDemoRootView: View {
                 .id("\(selectedView.rawValue)-\(selectedSample.rawValue)")
             }
         }
-        .frame(minWidth: 980, minHeight: 680)
+        .frame(minWidth: 1180, minHeight: 720)
         .toolbar {
             ToolbarItem {
                 Picker("Sample", selection: $selectedSample) {

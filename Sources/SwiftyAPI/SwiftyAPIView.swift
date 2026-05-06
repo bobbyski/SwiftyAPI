@@ -1,5 +1,15 @@
 import SwiftUI
 
+#if os(macOS)
+import AppKit
+import UniformTypeIdentifiers
+#endif
+
+public extension Notification.Name {
+    static let swiftyAPILoadDocument = Notification.Name("SwiftyAPI.loadDocument")
+    static let swiftyAPISaveDocument = Notification.Name("SwiftyAPI.saveDocument")
+}
+
 public struct SwiftyAPIView: View {
     @Environment(\.colorScheme) private var colorScheme
 
@@ -10,10 +20,11 @@ public struct SwiftyAPIView: View {
     @State private var selectedOperationID: String?
     @State private var selectedGeneratorKey: String
     @State private var isGeneratorSelectorPresented = false
-    @State private var operationsPaneWidth: CGFloat = 320
-    @State private var codePaneWidth: CGFloat = 360
+    @State private var operationsPaneWidth: CGFloat = 300
+    @State private var codePaneWidth: CGFloat = 380
     @State private var operationsDragStartWidth: CGFloat?
     @State private var codeDragStartWidth: CGFloat?
+    @State private var suppressNextFormatTranslation = false
 
     private let onChange: (OpenAPIDocument) -> Void
     private let generators: [any SwiftyAPICodeGenerator]
@@ -43,12 +54,41 @@ public struct SwiftyAPIView: View {
         }
         .onAppear(perform: publishDocument)
         .onChange(of: source) { _, _ in
+            refreshFormatFromSource()
             publishDocument()
         }
         .onChange(of: format) { oldFormat, newFormat in
+            if suppressNextFormatTranslation {
+                suppressNextFormatTranslation = false
+                publishDocument()
+                return
+            }
             translateSource(from: oldFormat, to: newFormat)
             publishDocument()
         }
+        #if os(macOS)
+        .toolbar {
+            ToolbarItemGroup {
+                Button {
+                    loadSourceFile()
+                } label: {
+                    Label("Load", systemImage: "folder")
+                }
+
+                Button {
+                    saveSourceFile()
+                } label: {
+                    Label("Save", systemImage: "square.and.arrow.down")
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .swiftyAPILoadDocument)) { _ in
+            loadSourceFile()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .swiftyAPISaveDocument)) { _ in
+            saveSourceFile()
+        }
+        #endif
     }
 
     private var header: some View {
@@ -283,6 +323,7 @@ public struct SwiftyAPIView: View {
             operationsList
                 .frame(width: operationsPaneWidth)
                 .background(Color(nsColor: .controlBackgroundColor))
+                .clipped()
 
             resizingDivider {
                 DragGesture(minimumDistance: 1)
@@ -291,7 +332,7 @@ public struct SwiftyAPIView: View {
                             operationsDragStartWidth = operationsPaneWidth
                         }
                         let startWidth = operationsDragStartWidth ?? operationsPaneWidth
-                        operationsPaneWidth = clampedPaneWidth(startWidth + value.translation.width, minimum: 240, maximum: 520)
+                        operationsPaneWidth = clampedPaneWidth(startWidth + value.translation.width, minimum: 260, maximum: 460)
                     }
                     .onEnded { _ in
                         operationsDragStartWidth = nil
@@ -303,7 +344,7 @@ public struct SwiftyAPIView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(28)
             }
-            .frame(minWidth: 360, maxWidth: .infinity, maxHeight: .infinity)
+            .frame(minWidth: 420, maxWidth: .infinity, maxHeight: .infinity)
             .background(Color(nsColor: .textBackgroundColor))
 
             resizingDivider {
@@ -364,16 +405,21 @@ public struct SwiftyAPIView: View {
                                             .font(.callout)
                                             .foregroundStyle(.primary)
                                             .lineLimit(1)
+                                            .truncationMode(.tail)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
                                         Text(operation.path)
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
                                             .lineLimit(1)
-                                            .truncationMode(.middle)
+                                            .truncationMode(.head)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
                                     }
+                                    .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
 
                                     Spacer(minLength: 8)
 
                                     methodBadge(operation.method)
+                                        .fixedSize()
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .contentShape(Rectangle())
@@ -490,15 +536,7 @@ public struct SwiftyAPIView: View {
                         .foregroundStyle(.secondary)
                         .padding(.vertical, 2)
                 } else {
-                    ForEach(requestDisplayRows(parameters: parameters, requestBody: requestBody), id: \.id) { row in
-                        parameterRow(name: row.name, type: row.type, detail: row.detail)
-                            .padding(.leading, row.indent)
-                            .padding(.vertical, 10)
-
-                        if row.id != requestDisplayRows(parameters: parameters, requestBody: requestBody).last?.id {
-                            Divider()
-                        }
-                    }
+                    detailRows(requestDisplayRows(parameters: parameters, requestBody: requestBody))
                 }
             }
             .padding(16)
@@ -533,15 +571,7 @@ public struct SwiftyAPIView: View {
                         .foregroundStyle(.secondary)
                         .padding(.vertical, 2)
                 } else {
-                    ForEach(responseDisplayRows(responses), id: \.id) { row in
-                        parameterRow(name: row.name, type: row.type, detail: row.detail)
-                            .padding(.leading, row.indent)
-                            .padding(.vertical, 10)
-
-                        if row.id != responseDisplayRows(responses).last?.id {
-                            Divider()
-                        }
-                    }
+                    detailRows(responseDisplayRows(responses))
                 }
             }
             .padding(16)
@@ -600,6 +630,27 @@ public struct SwiftyAPIView: View {
         }
     }
 
+    private func detailRows(_ rows: [DetailRow]) -> some View {
+        ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
+            parameterRow(name: row.name, type: row.type, detail: row.detail)
+                .padding(.leading, row.indent)
+                .padding(.vertical, 10)
+
+            if shouldSeparateDetailRow(at: index, in: rows) {
+                Divider()
+            }
+        }
+    }
+
+    private func shouldSeparateDetailRow(at index: Int, in rows: [DetailRow]) -> Bool {
+        let nextIndex = index + 1
+        guard rows.indices.contains(nextIndex) else {
+            return false
+        }
+
+        return rows[index].group != rows[nextIndex].group
+    }
+
     private func parameterDetail(_ parameter: OpenAPIParameter) -> String {
         var parts: [String] = [parameter.location]
         if parameter.isRequired {
@@ -643,6 +694,7 @@ public struct SwiftyAPIView: View {
         var rows = parameters.map { parameter in
             DetailRow(
                 id: parameter.displayID,
+                group: "parameters",
                 name: parameter.name,
                 type: parameter.type ?? parameter.location,
                 detail: parameterDetail(parameter)
@@ -653,6 +705,7 @@ public struct SwiftyAPIView: View {
             rows.append(
                 DetailRow(
                     id: "request-body",
+                    group: "request-body",
                     name: requestBody.schemaName ?? "body",
                     type: requestBody.contentTypes.first ?? "object",
                     detail: requestBodyDetail(requestBody)
@@ -663,6 +716,7 @@ public struct SwiftyAPIView: View {
                 contentsOf: requestBody.schemaFields.map { field in
                     DetailRow(
                         id: "request-body-\(field.displayID)",
+                        group: "request-body",
                         name: field.name,
                         type: field.type,
                         detail: schemaFieldDetail(field),
@@ -680,6 +734,7 @@ public struct SwiftyAPIView: View {
             [
                 DetailRow(
                     id: "response-\(response.statusCode)",
+                    group: "response-\(response.statusCode)",
                     name: response.statusCode,
                     type: response.schemaName ?? response.contentTypes.first ?? "response",
                     detail: response.description ?? "No response description."
@@ -687,6 +742,7 @@ public struct SwiftyAPIView: View {
             ] + response.schemaFields.map { field in
                 DetailRow(
                     id: "response-\(response.statusCode)-\(field.displayID)",
+                    group: "response-\(response.statusCode)",
                     name: field.name,
                     type: field.type,
                     detail: schemaFieldDetail(field),
@@ -872,6 +928,92 @@ public struct SwiftyAPIView: View {
             return
         }
     }
+
+    private func refreshFormatFromSource() {
+        let detectedFormat = OpenAPIFormatTranslator.inferFormat(from: source, fallback: format)
+        guard detectedFormat != format else {
+            return
+        }
+
+        suppressNextFormatTranslation = true
+        format = detectedFormat
+    }
+
+    private func replaceSource(_ newSource: String, suggestedFormat: OpenAPIFormat) {
+        let detectedFormat = OpenAPIFormatTranslator.inferFormat(from: newSource, fallback: suggestedFormat)
+        if detectedFormat != format {
+            suppressNextFormatTranslation = true
+            format = detectedFormat
+        }
+        source = newSource
+    }
+
+    #if os(macOS)
+    private func loadSourceFile() {
+        let panel = NSOpenPanel()
+        panel.title = "Load OpenAPI Document"
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.allowedContentTypes = Self.openAPIContentTypes
+
+        guard panel.runModal() == .OK,
+              let url = panel.url,
+              let loadedSource = try? String(contentsOf: url, encoding: .utf8) else {
+            return
+        }
+
+        replaceSource(loadedSource, suggestedFormat: OpenAPIFormat.infer(from: url.path))
+    }
+
+    private func saveSourceFile() {
+        let panel = NSSavePanel()
+        panel.title = "Save OpenAPI Document"
+        panel.allowedContentTypes = [Self.contentType(for: format)]
+        panel.nameFieldStringValue = defaultSaveFilename
+
+        guard panel.runModal() == .OK,
+              let url = panel.url else {
+            return
+        }
+
+        try? source.write(to: url, atomically: true, encoding: .utf8)
+    }
+
+    private static var openAPIContentTypes: [UTType] {
+        [
+            .json,
+            contentType(for: .yaml),
+            UTType(filenameExtension: "yml") ?? .plainText,
+            .plainText
+        ]
+    }
+
+    private static func contentType(for format: OpenAPIFormat) -> UTType {
+        switch format {
+        case .json:
+            return .json
+        case .yaml:
+            return UTType(filenameExtension: "yaml") ?? .plainText
+        }
+    }
+
+    private var defaultSaveFilename: String {
+        let baseName = (summary?.title ?? "openapi")
+            .lowercased()
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { $0.isEmpty == false }
+            .joined(separator: "-")
+
+        let resolvedBaseName = baseName.isEmpty ? "openapi" : baseName
+        switch format {
+        case .json:
+            return "\(resolvedBaseName).json"
+        case .yaml:
+            return "\(resolvedBaseName).yaml"
+        }
+    }
+    #endif
 
     private func publishDocument() {
         guard let document = try? OpenAPIDocument(source: source, format: format) else {
@@ -1112,6 +1254,7 @@ private struct OperationGroup {
 
 private struct DetailRow {
     var id: String
+    var group: String
     var name: String
     var type: String
     var detail: String
