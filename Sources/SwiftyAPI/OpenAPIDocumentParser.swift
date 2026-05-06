@@ -86,6 +86,7 @@ public enum OpenAPIDocumentParser {
                         method: method,
                         path: path,
                         operationID: operationObject?["operationId"] as? String,
+                        group: (operationObject?["tags"] as? [String])?.first,
                         summary: operationObject?["summary"] as? String,
                         description: operationObject?["description"] as? String,
                         parameters: pathParameters + operationParameters,
@@ -365,6 +366,7 @@ public enum OpenAPIDocumentParser {
                     method: method,
                     path: path,
                     operationID: yamlScalar(in: block, key: "operationId"),
+                    group: yamlStringArray(in: block, key: "tags").first,
                     summary: yamlScalar(in: block, key: "summary"),
                     description: yamlScalar(in: block, key: "description"),
                     parameters: parseYAMLParameters(from: block, components: parameterComponents),
@@ -578,6 +580,24 @@ public enum OpenAPIDocumentParser {
 
     private static func yamlBool(in lines: [YAMLLine], key: String) -> Bool {
         yamlScalar(in: lines, key: key)?.lowercased() == "true"
+    }
+
+    private static func yamlStringArray(in lines: [YAMLLine], key: String) -> [String] {
+        if let inline = yamlScalar(in: lines, key: key),
+           inline.hasPrefix("["),
+           inline.hasSuffix("]") {
+            return inline
+                .dropFirst()
+                .dropLast()
+                .split(separator: ",")
+                .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines).unquoted() }
+                .filter { $0.isEmpty == false }
+        }
+
+        return yamlNestedBlock(in: lines, parent: key).compactMap { line in
+            let value = line.text.removingListMarker().unquoted()
+            return value.isEmpty ? nil : value
+        }
     }
 
     private static func yamlReference(in lines: [YAMLLine]) -> String? {

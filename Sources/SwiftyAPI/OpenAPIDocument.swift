@@ -83,6 +83,7 @@ public struct OpenAPIOperation: Identifiable, Equatable, Sendable {
     public var method: OpenAPIHTTPMethod
     public var path: String
     public var operationID: String?
+    public var group: String?
     public var summary: String?
     public var description: String?
     public var parameters: [OpenAPIParameter]
@@ -93,6 +94,7 @@ public struct OpenAPIOperation: Identifiable, Equatable, Sendable {
         method: OpenAPIHTTPMethod,
         path: String,
         operationID: String? = nil,
+        group: String? = nil,
         summary: String? = nil,
         description: String? = nil,
         parameters: [OpenAPIParameter] = [],
@@ -102,6 +104,7 @@ public struct OpenAPIOperation: Identifiable, Equatable, Sendable {
         self.method = method
         self.path = path
         self.operationID = operationID
+        self.group = group
         self.summary = summary
         self.description = description
         self.parameters = parameters

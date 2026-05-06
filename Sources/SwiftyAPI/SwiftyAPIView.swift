@@ -27,6 +27,7 @@ public struct SwiftyAPIView: View {
     @State private var suppressNextFormatTranslation = false
     @State private var isEditingOperation = false
     @State private var pendingDelete: OperationDeleteTarget?
+    @State private var customGroups: [String] = []
 
     private let onChange: (OpenAPIDocument) -> Void
     private let generators: [any SwiftyAPICodeGenerator]
@@ -119,6 +120,13 @@ public struct SwiftyAPIView: View {
 
                 generatorSelector
                     .frame(width: 330)
+
+                if selectedMode == .design {
+                    Button(isEditingOperation ? "Done" : "Edit") {
+                        isEditingOperation.toggle()
+                    }
+                    .buttonStyle(.bordered)
+                }
 
                 Picker("Format", selection: $format) {
                     ForEach(OpenAPIFormat.allCases, id: \.self) { format in
@@ -332,7 +340,7 @@ public struct SwiftyAPIView: View {
 
     private var designWorkbench: some View {
         HStack(spacing: 0) {
-            operationsList
+            operationsPane
                 .frame(width: operationsPaneWidth)
                 .background(Color(nsColor: .controlBackgroundColor))
                 .clipped()
@@ -402,6 +410,15 @@ public struct SwiftyAPIView: View {
         min(max(width, minimum), maximum)
     }
 
+    @ViewBuilder
+    private var operationsPane: some View {
+        if isEditingOperation {
+            editableOperationsList
+        } else {
+            operationsList
+        }
+    }
+
     private var operationsList: some View {
         List {
             if let operations = summary?.operations, operations.isEmpty == false {
@@ -410,7 +427,6 @@ public struct SwiftyAPIView: View {
                         ForEach(group.operations) { operation in
                             Button {
                                 selectedOperationID = operation.id
-                                isEditingOperation = false
                             } label: {
                                 HStack(spacing: 10) {
                                     VStack(alignment: .leading, spacing: 3) {
@@ -455,6 +471,86 @@ public struct SwiftyAPIView: View {
         .listStyle(.sidebar)
     }
 
+    private var editableOperationsList: some View {
+        List {
+            if let operations = summary?.operations, operations.isEmpty == false {
+                Section("Operations") {
+                    ForEach(operations.indices, id: \.self) { index in
+                        editableOperationRow(index: index, operation: operations[index])
+                    }
+                }
+            } else {
+                Text("No operations")
+                    .foregroundStyle(.secondary)
+            }
+
+            Button {
+                addGroup()
+            } label: {
+                Label("Add group", systemImage: "folder.badge.plus")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .listRowInsets(EdgeInsets(top: 8, leading: 10, bottom: 0, trailing: 10))
+
+            Button {
+                addOperation()
+            } label: {
+                Label("Add API call", systemImage: "plus")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .listRowInsets(EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 10))
+        }
+        .listStyle(.sidebar)
+    }
+
+    private func editableOperationRow(index: Int, operation: OpenAPIOperation) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Picker("Method", selection: bindingForOperationMethod(at: index)) {
+                    ForEach(OpenAPIHTTPMethod.allCases, id: \.self) { method in
+                        Text(method.rawValue.uppercased()).tag(method)
+                    }
+                }
+                .labelsHidden()
+                .frame(width: 92)
+
+                Button("-") {
+                    pendingDelete = OperationDeleteTarget(
+                        title: operation.summary ?? operation.path,
+                        kind: .operation(operation.id)
+                    )
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.red)
+                .accessibilityLabel("Delete \(operation.summary ?? operation.path)")
+            }
+
+            TextField("Summary", text: bindingForOperationString(at: index, \.summary, fallback: operation.summary ?? ""))
+                .textFieldStyle(.roundedBorder)
+            TextField("Path", text: bindingForOperationPath(at: index))
+                .font(.system(.body, design: .monospaced))
+                .textFieldStyle(.roundedBorder)
+            Picker("Group", selection: bindingForOperationGroup(at: index)) {
+                ForEach(groupChoices, id: \.self) { group in
+                    Text(group).tag(group)
+                }
+            }
+            .labelsHidden()
+        }
+        .padding(.vertical, 6)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            selectedOperationID = operation.id
+        }
+        .listRowBackground(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(selectedOperationID == operation.id ? Color.accentColor.opacity(0.10) : .clear)
+                .padding(.vertical, 2)
+        )
+    }
+
     private var operationDetail: some View {
         guard let operation = selectedOperation else {
             return AnyView(placeholder(title: "Select an Operation"))
@@ -492,10 +588,6 @@ public struct SwiftyAPIView: View {
                             Button("Try it") {}
                                 .buttonStyle(.borderedProminent)
                                 .disabled(true)
-                            Button("Edit") {
-                                isEditingOperation = true
-                            }
-                            .buttonStyle(.bordered)
                         }
                         .padding(10)
                         .background(
@@ -549,10 +641,6 @@ public struct SwiftyAPIView: View {
                         Button("Try it") {}
                             .buttonStyle(.borderedProminent)
                             .disabled(true)
-                        Button("Done") {
-                            isEditingOperation = false
-                        }
-                        .buttonStyle(.bordered)
                     }
                     .padding(10)
                     .background(
@@ -628,16 +716,10 @@ public struct SwiftyAPIView: View {
         let responses = selectedOperation?.responses ?? []
 
         return VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 10) {
-                Circle()
-                    .fill(responseTint(for: responses.first?.statusCode ?? "200"))
-                    .frame(width: 12, height: 12)
-                Text(responses.first?.statusCode ?? "Response")
+            HStack {
+                Text("Responses")
                     .font(.title3)
                     .fontWeight(.semibold)
-                    .foregroundStyle(responseTint(for: responses.first?.statusCode ?? "200"))
-                Text(responses.first?.description ?? "")
-                    .font(.title3)
                 Spacer()
             }
             .padding(16)
@@ -651,12 +733,59 @@ public struct SwiftyAPIView: View {
                         .foregroundStyle(.secondary)
                         .padding(.vertical, 2)
                 } else {
-                    detailRows(responseDisplayRows(responses))
+                    ForEach(responses.indices, id: \.self) { index in
+                        responseVariantView(responses[index])
+
+                        if index < responses.count - 1 {
+                            Divider()
+                        }
+                    }
                 }
             }
             .padding(16)
         }
         .background(cardBackground)
+    }
+
+    private func responseVariantView(_ response: OpenAPIResponse) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            responseStatusHeader(statusCode: response.statusCode, description: response.description)
+
+            let rows = response.schemaFields.map { field in
+                DetailRow(
+                    id: "response-\(response.statusCode)-\(field.displayID)",
+                    group: "response-\(response.statusCode)",
+                    name: field.name,
+                    type: field.type,
+                    detail: schemaFieldDetail(field),
+                    indent: 16
+                )
+            }
+
+            if rows.isEmpty {
+                Text(response.schemaName ?? response.contentTypes.first ?? "No response fields are defined.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            } else {
+                detailRows(rows)
+            }
+        }
+        .padding(.vertical, 10)
+    }
+
+    private func responseStatusHeader(statusCode: String, description: String?) -> some View {
+        HStack(spacing: 10) {
+            Circle()
+                .fill(responseTint(for: statusCode))
+                .frame(width: 12, height: 12)
+            Text(statusCode)
+                .font(.title3)
+                .fontWeight(.semibold)
+                .foregroundStyle(responseTint(for: statusCode))
+            Text(description ?? "")
+                .font(.title3)
+            Spacer()
+        }
     }
 
     private func editableRequestCard(operation: OpenAPIOperation) -> some View {
@@ -703,12 +832,12 @@ public struct SwiftyAPIView: View {
                                 .padding(.vertical, 10)
                         }
                     }
-
-                    addButton("Add request parameter") {
-                        addRequestItem()
-                    }
-                    .padding(.top, 10)
                 }
+
+                addButton("Add request parameter") {
+                    addRequestItem()
+                }
+                .padding(.top, 10)
             }
             .padding(16)
         }
@@ -717,16 +846,10 @@ public struct SwiftyAPIView: View {
 
     private func editableResponsesCard(operation: OpenAPIOperation) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 10) {
-                Circle()
-                    .fill(responseTint(for: operation.responses.first?.statusCode ?? "200"))
-                    .frame(width: 12, height: 12)
-                Text(operation.responses.first?.statusCode ?? "Response")
+            HStack {
+                Text("Responses")
                     .font(.title3)
                     .fontWeight(.semibold)
-                    .foregroundStyle(responseTint(for: operation.responses.first?.statusCode ?? "200"))
-                Text(operation.responses.first?.description ?? "")
-                    .font(.title3)
                 Spacer()
             }
             .padding(16)
@@ -834,22 +957,29 @@ public struct SwiftyAPIView: View {
     }
 
     private func editableResponseRow(index: Int, response: OpenAPIResponse) -> some View {
-        editableFieldRow(
-            name: Binding(
-                get: { selectedOperation?.responses[safe: index]?.statusCode ?? response.statusCode },
-                set: { newValue in updateSelectedOperation { $0.responses[index].statusCode = newValue } }
-            ),
-            type: Binding(
-                get: { selectedOperation?.responses[safe: index]?.schemaName ?? response.schemaName ?? response.contentTypes.first ?? "" },
-                set: { newValue in updateSelectedOperation { $0.responses[index].schemaName = newValue.nilIfEmpty } }
-            ),
-            detail: Binding(
-                get: { selectedOperation?.responses[safe: index]?.description ?? response.description ?? "" },
-                set: { newValue in updateSelectedOperation { $0.responses[index].description = newValue.nilIfEmpty } }
-            ),
-            deleteTitle: response.statusCode,
-            deleteKind: .response(index)
-        )
+        HStack(alignment: .top, spacing: 10) {
+            Circle()
+                .fill(responseTint(for: response.statusCode))
+                .frame(width: 12, height: 12)
+                .padding(.top, 9)
+
+            editableFieldRow(
+                name: Binding(
+                    get: { selectedOperation?.responses[safe: index]?.statusCode ?? response.statusCode },
+                    set: { newValue in updateSelectedOperation { $0.responses[index].statusCode = newValue } }
+                ),
+                type: Binding(
+                    get: { selectedOperation?.responses[safe: index]?.schemaName ?? response.schemaName ?? response.contentTypes.first ?? "" },
+                    set: { newValue in updateSelectedOperation { $0.responses[index].schemaName = newValue.nilIfEmpty } }
+                ),
+                detail: Binding(
+                    get: { selectedOperation?.responses[safe: index]?.description ?? response.description ?? "" },
+                    set: { newValue in updateSelectedOperation { $0.responses[index].description = newValue.nilIfEmpty } }
+                ),
+                deleteTitle: response.statusCode,
+                deleteKind: .response(index)
+            )
+        }
         .padding(.vertical, 10)
     }
 
@@ -1423,6 +1553,71 @@ public struct SwiftyAPIView: View {
         )
     }
 
+    private func bindingForOperationString(
+        at index: Int,
+        _ keyPath: WritableKeyPath<OpenAPIOperation, String?>,
+        fallback: String
+    ) -> Binding<String> {
+        Binding(
+            get: { summary?.operations[safe: index]?[keyPath: keyPath] ?? fallback },
+            set: { newValue in
+                updateOperation(at: index) { operation in
+                    operation[keyPath: keyPath] = newValue.nilIfEmpty
+                }
+            }
+        )
+    }
+
+    private func bindingForOperationPath(at index: Int) -> Binding<String> {
+        Binding(
+            get: { summary?.operations[safe: index]?.path ?? "" },
+            set: { newValue in
+                updateOperation(at: index) { operation in
+                    operation.path = newValue
+                }
+            }
+        )
+    }
+
+    private func bindingForOperationMethod(at index: Int) -> Binding<OpenAPIHTTPMethod> {
+        Binding(
+            get: { summary?.operations[safe: index]?.method ?? .get },
+            set: { newValue in
+                updateOperation(at: index) { operation in
+                    operation.method = newValue
+                }
+            }
+        )
+    }
+
+    private func bindingForOperationGroup(at index: Int) -> Binding<String> {
+        Binding(
+            get: { operationGroupTitle(summary?.operations[safe: index]) },
+            set: { newValue in
+                updateOperation(at: index) { operation in
+                    operation.group = newValue.nilIfEmpty
+                }
+            }
+        )
+    }
+
+    private var groupChoices: [String] {
+        let operationGroups = (summary?.operations ?? []).map { operationGroupTitle($0) }
+        let values = Set(operationGroups + customGroups)
+        return values.sorted()
+    }
+
+    private func updateOperation(at index: Int, _ update: (inout OpenAPIOperation) -> Void) {
+        guard summary?.operations.indices.contains(index) == true else {
+            return
+        }
+
+        var operation = summary!.operations[index]
+        update(&operation)
+        summary?.operations[index] = operation
+        selectedOperationID = operation.id
+    }
+
     private func shouldSeparateEditableRequestParameter(at index: Int, operation: OpenAPIOperation) -> Bool {
         if index < operation.parameters.count - 1 {
             return false
@@ -1434,6 +1629,8 @@ public struct SwiftyAPIView: View {
     private func performDelete(_ target: OperationDeleteTarget) {
         updateSelectedOperation { operation in
             switch target.kind {
+            case .operation:
+                return
             case .parameter(let index):
                 guard operation.parameters.indices.contains(index) else { return }
                 operation.parameters.remove(at: index)
@@ -1450,6 +1647,47 @@ public struct SwiftyAPIView: View {
                       operation.responses[responseIndex].schemaFields.indices.contains(fieldIndex) else { return }
                 operation.responses[responseIndex].schemaFields.remove(at: fieldIndex)
             }
+        }
+
+        if case .operation(let operationID) = target.kind {
+            deleteOperation(id: operationID)
+        }
+    }
+
+    private func addGroup() {
+        let nextIndex = customGroups.count + 1
+        let name = "New Group \(nextIndex)"
+        customGroups.append(name)
+    }
+
+    private func addOperation() {
+        let operationNumber = (summary?.operations.count ?? 0) + 1
+        let operation = OpenAPIOperation(
+            method: .get,
+            path: "/new-operation-\(operationNumber)",
+            group: groupChoices.first ?? "New Group",
+            summary: "New API call",
+            description: "Describe this API call.",
+            responses: [
+                OpenAPIResponse(statusCode: "200", description: "Success.")
+            ]
+        )
+
+        summary?.operations.append(operation)
+        selectedOperationID = operation.id
+    }
+
+    private func deleteOperation(id operationID: String) {
+        guard var operations = summary?.operations,
+              let index = operations.firstIndex(where: { $0.id == operationID }) else {
+            return
+        }
+
+        operations.remove(at: index)
+        summary?.operations = operations
+
+        if selectedOperationID == operationID {
+            selectedOperationID = operations[safe: min(index, operations.count - 1)]?.id ?? operations.last?.id
         }
     }
 
@@ -1702,18 +1940,33 @@ public struct SwiftyAPIView: View {
 
     private func operationGroups(from operations: [OpenAPIOperation]) -> [OperationGroup] {
         let grouped = Dictionary(grouping: operations) { operation in
-            operation.path
-                .split(separator: "/")
-                .first
-                .map(String.init) ?? "Root"
+            operationGroupTitle(operation)
         }
 
         return grouped.keys.sorted().map { key in
             OperationGroup(
-                title: key.prefix(1).uppercased() + key.dropFirst(),
+                title: key,
                 operations: (grouped[key] ?? []).sorted { $0.id < $1.id }
             )
         }
+    }
+
+    private func operationGroupTitle(_ operation: OpenAPIOperation?) -> String {
+        guard let operation else {
+            return "Root"
+        }
+
+        if let group = operation.group?.trimmingCharacters(in: .whitespacesAndNewlines),
+           group.isEmpty == false {
+            return group
+        }
+
+        let pathGroup = operation.path
+            .split(separator: "/")
+            .first
+            .map(String.init) ?? "Root"
+
+        return pathGroup.prefix(1).uppercased() + pathGroup.dropFirst()
     }
 }
 
@@ -1748,6 +2001,7 @@ private struct OperationDeleteTarget: Identifiable {
 }
 
 private enum OperationDeleteKind {
+    case operation(String)
     case parameter(Int)
     case requestBody
     case requestBodyField(Int)
