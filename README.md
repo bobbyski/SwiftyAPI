@@ -8,7 +8,7 @@ The package also includes `SwiftyAPIDemo`, a macOS app that demonstrates the fra
 
 ![SwiftyAPI design view showing Swift URLSession examples](docs/images/swiftyapi-design-urlsession.png)
 
-![SwiftyAPI design view with request and response examples](docs/images/swiftyapi-design-examples.png)
+![SwiftyAPI design view with open picker](docs/images/screenshot2.png)
 
 ## Features
 
