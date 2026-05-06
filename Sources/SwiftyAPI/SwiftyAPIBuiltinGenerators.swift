@@ -4,22 +4,8 @@ public enum SwiftyAPIBuiltinGenerators {
     public static var all: [any SwiftyAPICodeGenerator] {
         [
             SwiftyAPICurlExampleGenerator(),
-            SwiftyAPITemplateCodeGenerator(
-                name: "Swift URLSession Client",
-                description: "Generates a Swift client that uses Foundation URLSession for transport, Codable models for JSON payloads, and async/await methods for each operation.",
-                language: "Swift",
-                variation: "URLSession",
-                type: "client",
-                supportedOutputs: [.client, .model, .request, .support]
-            ),
-            SwiftyAPITemplateCodeGenerator(
-                name: "Swift Vapor Server",
-                description: "Generates Swift server scaffolding for Vapor, including route registration, request DTOs, response DTOs, and handler stubs for each OpenAPI operation.",
-                language: "Swift",
-                variation: "Vapor",
-                type: "server",
-                supportedOutputs: [.model, .request, .support]
-            ),
+            SwiftyAPIURLSessionClientGenerator(),
+            SwiftyAPIVaporServerGenerator(),
             SwiftyAPITemplateCodeGenerator(
                 name: "TypeScript Axios Client",
                 description: "Generates a TypeScript client that uses axios for HTTP transport, typed request parameters, typed response payloads, and operation functions.",

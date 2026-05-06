@@ -10,6 +10,7 @@
 		158118E4E0F26E43017EA367 /* SwiftyAPIDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B13BAA47F73503F8267881B /* SwiftyAPIDebugView.swift */; };
 		1C189CCA140AFFF2DB8EA806 /* SwiftEndpointGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A985CAE7E1DF61FFC37CA84 /* SwiftEndpointGenerator.swift */; };
 		29C782E15B66D43C810F3499 /* OpenAPIDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE22467B35A54313E564E367 /* OpenAPIDocument.swift */; };
+		49DFA17B57D3106190AC844B /* SwiftyAPISwiftGenerators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 012A1C1D5296502C3E972E31 /* SwiftyAPISwiftGenerators.swift */; };
 		5AAEBF7E35C0CAFC0CF1BA81 /* SwiftyAPIJavaScriptCoreGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 666AEDE6348AA24CCD2FF164 /* SwiftyAPIJavaScriptCoreGenerator.swift */; };
 		7166F4DDAB63A21C3B0FC586 /* SwiftyAPI.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0F2BAC32111CEF496D2487CD /* SwiftyAPI.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		808A738C62345E853AB0E479 /* OpenAPIFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234ADCF75DDD7D200CE8F36 /* OpenAPIFile.swift */; };
@@ -74,6 +75,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		012A1C1D5296502C3E972E31 /* SwiftyAPISwiftGenerators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftyAPISwiftGenerators.swift; sourceTree = "<group>"; };
 		0F2BAC32111CEF496D2487CD /* SwiftyAPI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftyAPI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		105FE2200012406D9E36C3CC /* SwiftyAPIBuiltinGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftyAPIBuiltinGeneratorTests.swift; sourceTree = "<group>"; };
 		1234ADCF75DDD7D200CE8F36 /* OpenAPIFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAPIFile.swift; sourceTree = "<group>"; };
@@ -175,6 +177,7 @@
 				7AD4A4B8B66DFAB0F0A32EA3 /* SwiftyAPICodeGenerator.swift */,
 				6B13BAA47F73503F8267881B /* SwiftyAPIDebugView.swift */,
 				666AEDE6348AA24CCD2FF164 /* SwiftyAPIJavaScriptCoreGenerator.swift */,
+				012A1C1D5296502C3E972E31 /* SwiftyAPISwiftGenerators.swift */,
 				EF80AA931F1AD8FFC9930E87 /* SwiftyAPIView.swift */,
 			);
 			path = SwiftyAPI;
@@ -349,6 +352,7 @@
 				E328EE57BC8664C221464152 /* SwiftyAPICodeGenerator.swift in Sources */,
 				158118E4E0F26E43017EA367 /* SwiftyAPIDebugView.swift in Sources */,
 				5AAEBF7E35C0CAFC0CF1BA81 /* SwiftyAPIJavaScriptCoreGenerator.swift in Sources */,
+				49DFA17B57D3106190AC844B /* SwiftyAPISwiftGenerators.swift in Sources */,
 				E785EA454071A46A96C7ADCF /* SwiftyAPIView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

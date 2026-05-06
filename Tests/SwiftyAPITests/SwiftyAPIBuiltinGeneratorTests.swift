@@ -23,44 +23,7 @@ func builtinGeneratorCatalogIncludesInitialPairings() throws {
 
 @Test
 func curlExampleGeneratorProducesDesignMethodExamples() throws {
-    let document = try OpenAPIDocument(
-        source: """
-        openapi: 3.0.3
-        info:
-          title: Example API
-          version: 1.0.0
-        servers:
-          - url: https://api.example.com
-        paths:
-          /pets:
-            post:
-              summary: Create pet
-              requestBody:
-                required: true
-                content:
-                  application/json:
-                    schema:
-                      type: object
-                      properties:
-                        name:
-                          type: string
-                        age:
-                          type: integer
-              responses:
-                '200':
-                  description: Created
-                  content:
-                    application/json:
-                      schema:
-                        type: object
-                        properties:
-                          id:
-                            type: integer
-                          name:
-                            type: string
-        """,
-        format: .yaml
-    )
+    let document = try makeGeneratorDocument()
     let operation = try #require(document.summary.operations.first)
     let result = try SwiftyAPICurlExampleGenerator().generateMethod(
         from: SwiftyAPIMethodGenerationContext(
@@ -77,6 +40,76 @@ func curlExampleGeneratorProducesDesignMethodExamples() throws {
     #expect(result.requestExample.contains("\"name\": \"name\""))
     #expect(result.responseExample.contains("\"id\": 0"))
     #expect(result.responseExample.contains("\"name\": \"name\""))
+}
+
+@Test
+func swiftURLSessionGeneratorProducesClientAndModels() throws {
+    let document = try makeGeneratorDocument()
+    let operation = try #require(document.summary.operations.first)
+    let generator = SwiftyAPIURLSessionClientGenerator()
+
+    let full = try generator.generateFull(from: document, options: SwiftyAPIGeneratorOptions())
+    let models = try #require(full.files.first { $0.path == "Generated/Models.swift" })
+    let client = try #require(full.files.first { $0.path == "Generated/APIClient.swift" })
+
+    #expect(models.contents.contains("public struct CreatePetRequest: Codable, Sendable"))
+    #expect(models.contents.contains("public var name: String?"))
+    #expect(models.contents.contains("public var age: Int?"))
+    #expect(models.contents.contains("public struct CreatePetResponse: Codable, Sendable"))
+    #expect(client.contents.contains("public struct ExampleAPIClient"))
+    #expect(client.contents.contains("public func createPet(body: CreatePetRequest) async throws -> CreatePetResponse"))
+    #expect(client.contents.contains("request.httpMethod = \"POST\""))
+    #expect(client.contents.contains("request.httpBody = try encoder.encode(body)"))
+    #expect(client.contents.contains("return try decoder.decode(CreatePetResponse.self, from: data)"))
+
+    let method = try generator.generateMethod(
+        from: SwiftyAPIMethodGenerationContext(
+            title: document.summary.title,
+            version: document.summary.version,
+            serverURL: document.summary.servers.first,
+            operation: operation
+        ),
+        options: SwiftyAPIGeneratorOptions()
+    )
+    #expect(method.requestExample.contains("let client = ExampleAPIClient(baseURL: URL(string: \"https://api.example.com\")!)"))
+    #expect(method.requestExample.contains("let response = try await client.createPet(body: CreatePetRequest(/* TODO */))"))
+    #expect(method.requestExample.contains("// Referenced models"))
+    #expect(method.requestExample.contains("public struct CreatePetRequest: Codable, Sendable"))
+    #expect(method.requestExample.contains("public struct CreatePetResponse: Codable, Sendable"))
+    #expect(method.responseExample == "let decoded: CreatePetResponse")
+}
+
+@Test
+func swiftVaporGeneratorProducesRoutesAndModels() throws {
+    let document = try makeGeneratorDocument()
+    let operation = try #require(document.summary.operations.first)
+    let generator = SwiftyAPIVaporServerGenerator()
+
+    let full = try generator.generateFull(from: document, options: SwiftyAPIGeneratorOptions())
+    let models = try #require(full.files.first { $0.path == "Generated/VaporModels.swift" })
+    let routes = try #require(full.files.first { $0.path == "Generated/VaporRoutes.swift" })
+
+    #expect(models.contents.contains("import Vapor"))
+    #expect(models.contents.contains("public struct CreatePetRequest: Codable, Sendable"))
+    #expect(routes.contents.contains("public protocol ExampleAPIServerHandlers"))
+    #expect(routes.contents.contains("public func registerExampleAPIServerRoutes"))
+    #expect(routes.contents.contains("app.post(\"pets\")"))
+    #expect(routes.contents.contains("func createPet(_ request: Request) async throws -> CreatePetResponse"))
+
+    let method = try generator.generateMethod(
+        from: SwiftyAPIMethodGenerationContext(
+            title: document.summary.title,
+            version: document.summary.version,
+            operation: operation
+        ),
+        options: SwiftyAPIGeneratorOptions()
+    )
+    #expect(method.requestExample.contains("app.post(\"pets\")"))
+    #expect(method.requestExample.contains("try await handlers.createPet(request)"))
+    #expect(method.requestExample.contains("// Referenced models"))
+    #expect(method.requestExample.contains("public struct CreatePetRequest: Codable, Sendable"))
+    #expect(method.requestExample.contains("public struct CreatePetResponse: Codable, Sendable"))
+    #expect(method.responseExample == "return CreatePetResponse(/* TODO */)")
 }
 
 @Test
@@ -142,4 +175,46 @@ func javaScriptCoreGeneratorRunsFullAndMethodGeneration() throws {
     )
     #expect(method.requestExample == "GET /pets")
     #expect(method.responseExample == "handle GET /pets")
+}
+
+private func makeGeneratorDocument() throws -> OpenAPIDocument {
+    try OpenAPIDocument(
+        source: """
+        openapi: 3.0.3
+        info:
+          title: Example API
+          version: 1.0.0
+        servers:
+          - url: https://api.example.com
+        paths:
+          /pets:
+            post:
+              summary: Create pet
+              operationId: createPet
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        age:
+                          type: integer
+              responses:
+                '200':
+                  description: Created
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                          name:
+                            type: string
+        """,
+        format: .yaml
+    )
 }
