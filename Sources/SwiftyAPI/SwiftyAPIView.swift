@@ -8,6 +8,10 @@ public struct SwiftyAPIView: View {
     @State private var selectedOperationID: String?
     @State private var selectedGeneratorKey: String
     @State private var isGeneratorSelectorPresented = false
+    @State private var operationsPaneWidth: CGFloat = 320
+    @State private var codePaneWidth: CGFloat = 360
+    @State private var operationsDragStartWidth: CGFloat?
+    @State private var codeDragStartWidth: CGFloat?
 
     private let onChange: (OpenAPIDocument) -> Void
     private let generators: [any SwiftyAPICodeGenerator]
@@ -271,24 +275,72 @@ public struct SwiftyAPIView: View {
     private var designWorkbench: some View {
         HStack(spacing: 0) {
             operationsList
-                .frame(minWidth: 280, idealWidth: 320, maxWidth: 360)
+                .frame(width: operationsPaneWidth)
                 .background(Color(nsColor: .controlBackgroundColor))
 
-            Divider()
+            resizingDivider {
+                DragGesture(minimumDistance: 1)
+                    .onChanged { value in
+                        if operationsDragStartWidth == nil {
+                            operationsDragStartWidth = operationsPaneWidth
+                        }
+                        let startWidth = operationsDragStartWidth ?? operationsPaneWidth
+                        operationsPaneWidth = clampedPaneWidth(startWidth + value.translation.width, minimum: 240, maximum: 520)
+                    }
+                    .onEnded { _ in
+                        operationsDragStartWidth = nil
+                    }
+            }
 
             ScrollView {
                 operationDetail
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(28)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(minWidth: 360, maxWidth: .infinity, maxHeight: .infinity)
             .background(Color(nsColor: .textBackgroundColor))
 
-            Divider()
+            resizingDivider {
+                DragGesture(minimumDistance: 1)
+                    .onChanged { value in
+                        if codeDragStartWidth == nil {
+                            codeDragStartWidth = codePaneWidth
+                        }
+                        let startWidth = codeDragStartWidth ?? codePaneWidth
+                        codePaneWidth = clampedPaneWidth(startWidth - value.translation.width, minimum: 300, maximum: 620)
+                    }
+                    .onEnded { _ in
+                        codeDragStartWidth = nil
+                    }
+            }
 
             requestResponseRail
-                .frame(width: 360)
+                .frame(width: codePaneWidth)
         }
+    }
+
+    private func resizingDivider<GestureType: Gesture>(_ gesture: () -> GestureType) -> some View {
+        Rectangle()
+            .fill(Color.clear)
+            .frame(width: 9)
+            .overlay {
+                Rectangle()
+                    .fill(Color(nsColor: .separatorColor))
+                    .frame(width: 1)
+            }
+            .contentShape(Rectangle())
+            .gesture(gesture())
+            .onHover { hovering in
+                if hovering {
+                    NSCursor.resizeLeftRight.push()
+                } else {
+                    NSCursor.pop()
+                }
+            }
+    }
+
+    private func clampedPaneWidth(_ width: CGFloat, minimum: CGFloat, maximum: CGFloat) -> CGFloat {
+        min(max(width, minimum), maximum)
     }
 
     private var operationsList: some View {
