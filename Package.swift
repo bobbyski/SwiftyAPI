@@ -26,7 +26,8 @@ let package = Package(
         .target(
             name: "SwiftyAPI",
             linkerSettings: [
-                .linkedFramework("JavaScriptCore")
+                .linkedFramework("JavaScriptCore"),
+                .linkedFramework("WebKit")
             ]
         ),
         .executableTarget(

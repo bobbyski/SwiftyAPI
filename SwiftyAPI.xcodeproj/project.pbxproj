@@ -11,8 +11,10 @@
 		1C189CCA140AFFF2DB8EA806 /* SwiftEndpointGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A985CAE7E1DF61FFC37CA84 /* SwiftEndpointGenerator.swift */; };
 		29C782E15B66D43C810F3499 /* OpenAPIDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE22467B35A54313E564E367 /* OpenAPIDocument.swift */; };
 		49DFA17B57D3106190AC844B /* SwiftyAPISwiftGenerators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 012A1C1D5296502C3E972E31 /* SwiftyAPISwiftGenerators.swift */; };
+		595B596935BAAC639585040A /* SwiftyAPIMonacoEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC83FC27AE24A215DD5D6807 /* SwiftyAPIMonacoEditor.swift */; };
 		5AAEBF7E35C0CAFC0CF1BA81 /* SwiftyAPIJavaScriptCoreGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 666AEDE6348AA24CCD2FF164 /* SwiftyAPIJavaScriptCoreGenerator.swift */; };
 		7166F4DDAB63A21C3B0FC586 /* SwiftyAPI.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0F2BAC32111CEF496D2487CD /* SwiftyAPI.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		7946BEBF35250EDA61CC2372 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D93DA6ABF2E702A0D764A9C8 /* WebKit.framework */; };
 		808A738C62345E853AB0E479 /* OpenAPIFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234ADCF75DDD7D200CE8F36 /* OpenAPIFile.swift */; };
 		886FF969B5BFA4B43D85D190 /* SwiftyAPIPythonDotNetGenerators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 204719516D1E0C4310A08326 /* SwiftyAPIPythonDotNetGenerators.swift */; };
 		8B5697B16258130BE9105029 /* SwiftyAPIDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93FC7C892DB45EA76031E899 /* SwiftyAPIDemoApp.swift */; };
@@ -98,7 +100,9 @@
 		B726196F5709AD04EDD83F99 /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		C7C0A176961C0863FF8A9A6F /* OpenAPIFormatTranslator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAPIFormatTranslator.swift; sourceTree = "<group>"; };
 		CB34A44C06D868EECFE40CA6 /* museum-api.yaml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = "museum-api.yaml"; sourceTree = "<group>"; };
+		CC83FC27AE24A215DD5D6807 /* SwiftyAPIMonacoEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftyAPIMonacoEditor.swift; sourceTree = "<group>"; };
 		D2499A513DA6EB5125F80FCF /* SwiftyAPIDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftyAPIDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D93DA6ABF2E702A0D764A9C8 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		E7BA8C11196A91080A7860B3 /* OpenAPIDocumentParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAPIDocumentParser.swift; sourceTree = "<group>"; };
 		EF80AA931F1AD8FFC9930E87 /* SwiftyAPIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftyAPIView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -117,6 +121,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C35050C03B827D54CF494375 /* JavaScriptCore.framework in Frameworks */,
+				7946BEBF35250EDA61CC2372 /* WebKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -164,6 +169,7 @@
 			isa = PBXGroup;
 			children = (
 				B726196F5709AD04EDD83F99 /* JavaScriptCore.framework */,
+				D93DA6ABF2E702A0D764A9C8 /* WebKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -181,6 +187,7 @@
 				7AD4A4B8B66DFAB0F0A32EA3 /* SwiftyAPICodeGenerator.swift */,
 				6B13BAA47F73503F8267881B /* SwiftyAPIDebugView.swift */,
 				666AEDE6348AA24CCD2FF164 /* SwiftyAPIJavaScriptCoreGenerator.swift */,
+				CC83FC27AE24A215DD5D6807 /* SwiftyAPIMonacoEditor.swift */,
 				204719516D1E0C4310A08326 /* SwiftyAPIPythonDotNetGenerators.swift */,
 				012A1C1D5296502C3E972E31 /* SwiftyAPISwiftGenerators.swift */,
 				ADC5415E2874CF110CA6B938 /* SwiftyAPITypeScriptGenerators.swift */,
@@ -358,6 +365,7 @@
 				E328EE57BC8664C221464152 /* SwiftyAPICodeGenerator.swift in Sources */,
 				158118E4E0F26E43017EA367 /* SwiftyAPIDebugView.swift in Sources */,
 				5AAEBF7E35C0CAFC0CF1BA81 /* SwiftyAPIJavaScriptCoreGenerator.swift in Sources */,
+				595B596935BAAC639585040A /* SwiftyAPIMonacoEditor.swift in Sources */,
 				886FF969B5BFA4B43D85D190 /* SwiftyAPIPythonDotNetGenerators.swift in Sources */,
 				49DFA17B57D3106190AC844B /* SwiftyAPISwiftGenerators.swift in Sources */,
 				A55ABBAF342CFAE040A49A39 /* SwiftyAPITypeScriptGenerators.swift in Sources */,

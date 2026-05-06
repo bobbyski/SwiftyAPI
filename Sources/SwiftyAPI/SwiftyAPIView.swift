@@ -1,6 +1,8 @@
 import SwiftUI
 
 public struct SwiftyAPIView: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     @State private var source: String
     @State private var format: OpenAPIFormat
     @State private var selectedMode: SwiftyAPIViewMode
@@ -263,10 +265,13 @@ public struct SwiftyAPIView: View {
         case .design:
             designWorkbench
         case .source:
-            TextEditor(text: $source)
-                .font(.system(.body, design: .monospaced))
-                .scrollContentBackground(.hidden)
-                .padding(12)
+            SwiftyAPIMonacoEditor(
+                text: $source,
+                language: sourceMonacoLanguage,
+                theme: systemMonacoTheme,
+                showsGutter: true,
+                isEditable: true
+            )
         case .generated:
             generatedView
         }
@@ -561,13 +566,15 @@ public struct SwiftyAPIView: View {
             darkCodePanel(
                 title: "Request",
                 subtitle: selectedGenerator?.name ?? "Generator",
-                code: requestCodePreview
+                code: requestCodePreview,
+                language: generatorMonacoLanguage
             )
 
             darkCodePanel(
                 title: "Response",
                 subtitle: selectedGenerator?.language ?? "Example",
-                code: responseCodePreview
+                code: responseCodePreview,
+                language: generatorMonacoLanguage
             )
         }
         .padding(18)
@@ -661,7 +668,7 @@ public struct SwiftyAPIView: View {
         }
     }
 
-    private func darkCodePanel(title: String, subtitle: String, code: String) -> some View {
+    private func darkCodePanel(title: String, subtitle: String, code: String, language: String) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text(title)
@@ -677,19 +684,19 @@ public struct SwiftyAPIView: View {
             Divider()
                 .background(Color.white.opacity(0.12))
 
-            ScrollView {
-                Text(code)
-                    .font(.system(.caption, design: .monospaced))
-                    .foregroundStyle(Color(red: 0.62, green: 0.84, blue: 1.0))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .textSelection(.enabled)
-                    .padding(16)
-            }
+            SwiftyAPIMonacoEditor(
+                text: .constant(code),
+                language: language,
+                theme: .designBlue,
+                showsGutter: false,
+                isEditable: false
+            )
+            .frame(minHeight: 220, maxHeight: .infinity)
         }
         .frame(maxHeight: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color(red: 0.04, green: 0.07, blue: 0.13))
+                .fill(Color(red: 0.06, green: 0.09, blue: 0.18))
         )
     }
 
@@ -784,15 +791,19 @@ public struct SwiftyAPIView: View {
                             VStack(alignment: .leading, spacing: 10) {
                                 Text(file.path)
                                     .font(.headline)
-                                Text(file.contents)
-                                    .font(.system(.caption, design: .monospaced))
-                                    .textSelection(.enabled)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(14)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .fill(Color(nsColor: .textBackgroundColor))
-                                    )
+                                SwiftyAPIMonacoEditor(
+                                    text: .constant(file.contents),
+                                    language: monacoLanguage(forPath: file.path),
+                                    theme: systemMonacoTheme,
+                                    showsGutter: true,
+                                    isEditable: false
+                                )
+                                .frame(minHeight: generatedEditorHeight(for: file.contents))
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
+                                )
                             }
                         }
                     }
@@ -886,6 +897,66 @@ public struct SwiftyAPIView: View {
 
     private var selectedGenerator: (any SwiftyAPICodeGenerator)? {
         generators.first { $0.registryKey == selectedGeneratorKey } ?? generators.first
+    }
+
+    private var sourceMonacoLanguage: String {
+        switch format {
+        case .json:
+            return "json"
+        case .yaml:
+            return "yaml"
+        }
+    }
+
+    private var systemMonacoTheme: SwiftyAPIMonacoTheme {
+        colorScheme == .dark ? .dark : .light
+    }
+
+    private var generatorMonacoLanguage: String {
+        guard let selectedGenerator else {
+            return "plaintext"
+        }
+
+        return monacoLanguage(for: selectedGenerator)
+    }
+
+    private func monacoLanguage(for generator: any SwiftyAPICodeGenerator) -> String {
+        switch generator.language.lowercased() {
+        case "curl":
+            return "shell"
+        case "swift":
+            return "swift"
+        case "typescript":
+            return "typescript"
+        case "javascript":
+            return "javascript"
+        case "python":
+            return "python"
+        case "c#":
+            return "csharp"
+        default:
+            return "plaintext"
+        }
+    }
+
+    private func monacoLanguage(forPath path: String) -> String {
+        let lowercased = path.lowercased()
+
+        if lowercased.hasSuffix(".swift") { return "swift" }
+        if lowercased.hasSuffix(".ts") || lowercased.hasSuffix(".tsx") { return "typescript" }
+        if lowercased.hasSuffix(".js") || lowercased.hasSuffix(".jsx") { return "javascript" }
+        if lowercased.hasSuffix(".py") { return "python" }
+        if lowercased.hasSuffix(".cs") { return "csharp" }
+        if lowercased.hasSuffix(".json") { return "json" }
+        if lowercased.hasSuffix(".yaml") || lowercased.hasSuffix(".yml") { return "yaml" }
+        if lowercased.hasSuffix(".md") { return "markdown" }
+        if lowercased.hasSuffix(".sh") { return "shell" }
+        return "plaintext"
+    }
+
+    private func generatedEditorHeight(for contents: String) -> CGFloat {
+        let lineCount = contents.split(separator: "\n", omittingEmptySubsequences: false).count
+        return min(max(CGFloat(lineCount * 19 + 34), 180), 760)
     }
 
     private var generatorChoices: [GeneratorChoice] {

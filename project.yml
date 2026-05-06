@@ -20,6 +20,7 @@ targets:
       - path: Sources/SwiftyAPI
     dependencies:
       - sdk: JavaScriptCore.framework
+      - sdk: WebKit.framework
     info:
       path: Generated/SwiftyAPI-Info.plist
       properties:
